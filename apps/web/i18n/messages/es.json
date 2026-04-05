@@ -1,0 +1,91 @@
+{
+  "common": {
+    "loading": "Cargando...",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "create": "Crear",
+    "confirm": "Confirmar",
+    "back": "Volver",
+    "search": "Buscar",
+    "noResults": "Sin resultados"
+  },
+  "auth": {
+    "signIn": "Iniciar sesión",
+    "signUp": "Registrarse",
+    "signOut": "Cerrar sesión",
+    "signInWithGoogle": "Continuar con Google",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "displayName": "Nombre",
+    "birthday": "Fecha de nacimiento"
+  },
+  "nav": {
+    "home": "Inicio",
+    "mySignups": "Mis inscripciones",
+    "notifications": "Notificaciones",
+    "profile": "Perfil"
+  },
+  "village": {
+    "title": "Pueblos",
+    "events": "Eventos",
+    "organizations": "Organizaciones",
+    "members": "Miembros",
+    "admin": "Administración",
+    "generateInvite": "Generar invitación"
+  },
+  "event": {
+    "title": "Título",
+    "description": "Descripción",
+    "startDate": "Fecha de inicio",
+    "endDate": "Fecha de fin",
+    "location": "Ubicación",
+    "price": "Precio",
+    "free": "Gratis",
+    "maxAttendees": "Máximo de asistentes",
+    "unlimited": "Sin límite",
+    "telephoneRequired": "Teléfono requerido",
+    "signUp": "Inscribirse",
+    "cancelSignUp": "Cancelar inscripción",
+    "spotsLeft": "{count} plazas disponibles",
+    "full": "Completo",
+    "waitlist": "Lista de espera",
+    "confirmed": "Confirmado",
+    "waitlisted": "En lista de espera",
+    "attendees": "Asistentes",
+    "draft": "Borrador",
+    "published": "Publicado",
+    "cancelled": "Cancelado",
+    "completed": "Completado",
+    "publish": "Publicar",
+    "createEvent": "Crear evento",
+    "editEvent": "Editar evento"
+  },
+  "organization": {
+    "name": "Nombre",
+    "type": "Tipo",
+    "ayuntamiento": "Ayuntamiento",
+    "peña": "Peña",
+    "asociación": "Asociación",
+    "requestOrg": "Solicitar organización",
+    "pending": "Pendiente",
+    "approved": "Aprobada",
+    "rejected": "Rechazada",
+    "approve": "Aprobar",
+    "reject": "Rechazar"
+  },
+  "profile": {
+    "myProfile": "Mi perfil",
+    "personas": "Personas a cargo",
+    "addPersona": "Añadir persona",
+    "editPersona": "Editar persona",
+    "biography": "Biografía",
+    "telephone": "Teléfono"
+  },
+  "notifications": {
+    "title": "Notificaciones",
+    "markAllRead": "Marcar todo como leído",
+    "noNotifications": "No tienes notificaciones"
+  }
+}
