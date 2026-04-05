@@ -1,59 +1,41 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
-import { getEvents } from "@villa-events/shared/services/eventService";
-import type { Event } from "@villa-events/shared/models/event";
-import { useAuth } from "@/lib/auth-context";
-import { NavBar } from "@/components/NavBar";
+import { useEffect, useState } from 'react';
+import { getVillages } from '@villa-events/shared/services/villageService';
+import type { VillageData } from '@villa-events/shared/models/village';
+import { VillageCard } from '@/components/village/VillageCard';
+import { SkeletonLoader } from '@/components/common/SkeletonLoader';
 
 export default function HomePage() {
-  const { user } = useAuth();
-  const [events, setEvents] = useState<Event[]>([]);
+  const [villages, setVillages] = useState<(VillageData & { id: string })[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getEvents()
-      .then(setEvents)
+    getVillages()
+      .then(setVillages)
       .finally(() => setLoading(false));
   }, []);
 
   return (
-    <>
-      <NavBar />
-      <main className="mx-auto max-w-4xl px-4 py-8">
-        <h1 className="mb-6 text-3xl font-bold">Próximos Eventos</h1>
-        {loading ? (
-          <p className="text-[var(--color-text-light)]">Cargando eventos...</p>
-        ) : events.length === 0 ? (
-          <p className="text-[var(--color-text-light)]">
-            No hay eventos programados.
-          </p>
-        ) : (
-          <div className="grid gap-4 sm:grid-cols-2">
-            {events.map((event) => (
-              <Link
-                key={event.id}
-                href={`/event/${event.id}`}
-                className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4 shadow-sm transition hover:shadow-md"
-              >
-                <h2 className="text-xl font-semibold">{event.title}</h2>
-                <p className="mt-1 text-sm text-[var(--color-text-light)]">
-                  {event.date?.toDate().toLocaleDateString("es-ES", {
-                    weekday: "long",
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  })}
-                </p>
-                <p className="mt-1 text-sm text-[var(--color-text-light)]">
-                  {event.location}
-                </p>
-              </Link>
-            ))}
-          </div>
-        )}
-      </main>
-    </>
+    <div className="px-4 py-6">
+      <h1 className="text-2xl font-bold text-gray-900 mb-1">Villa Events</h1>
+      <p className="text-sm text-gray-500 mb-6">Descubre eventos en tu pueblo</p>
+
+      {loading ? (
+        <div className="space-y-4">
+          {[1, 2, 3].map((i) => (
+            <SkeletonLoader key={i} className="h-52 rounded-xl" />
+          ))}
+        </div>
+      ) : villages.length === 0 ? (
+        <p className="text-gray-500 text-center py-12">No hay pueblos disponibles todavía.</p>
+      ) : (
+        <div className="space-y-4">
+          {villages.map((village) => (
+            <VillageCard key={village.id} village={village} />
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
