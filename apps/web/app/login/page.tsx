@@ -1,68 +1,130 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/lib/auth-context";
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/useAuth';
+import { createUserProfile } from '@villa-events/shared/services/userService';
 
 export default function LoginPage() {
-  const { signInWithGoogle, signInWithEmail, user } = useAuth();
+  const { user, signInWithGoogle, signInWithEmail, signUpWithEmail } = useAuth();
   const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+
   const [isSignUp, setIsSignUp] = useState(false);
-  const [error, setError] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [displayName, setDisplayName] = useState('');
+  const [birthday, setBirthday] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (user) router.push("/");
+    if (user) router.push('/');
   }, [user, router]);
 
   if (user) return null;
 
-  const handleEmailSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
+  const handleGoogleSignIn = async () => {
+    setError('');
+    setLoading(true);
     try {
-      await signInWithEmail(email, password, isSignUp);
-      router.push("/");
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Error al iniciar sesión");
+      await signInWithGoogle();
+      router.push('/');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error con Google');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    try {
+      if (isSignUp) {
+        if (!displayName.trim()) throw new Error('El nombre es obligatorio');
+        if (!birthday) throw new Error('La fecha de nacimiento es obligatoria');
+
+        await signUpWithEmail(email, password);
+        // After signUpWithEmail, user will be set by onAuthStateChanged.
+        // We need the uid — get it from the auth module directly.
+        const { auth } = await import('@villa-events/shared/firebase');
+        const uid = auth.currentUser?.uid;
+        if (uid) {
+          await createUserProfile(uid, {
+            displayName: displayName.trim(),
+            email,
+            birthday: new Date(birthday),
+          });
+        }
+        router.push('/');
+      } else {
+        await signInWithEmail(email, password);
+        router.push('/');
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error al iniciar sesión');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <main className="flex min-h-screen items-center justify-center px-4">
+    <div className="min-h-screen flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-sm space-y-6">
-        <h1 className="text-center text-2xl font-bold">Villa Events</h1>
-        <p className="text-center text-[var(--color-text-light)]">
-          {isSignUp ? "Crear cuenta" : "Iniciar sesión"}
-        </p>
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900">Villa Events</h1>
+          <p className="text-sm text-gray-500 mt-1">
+            {isSignUp ? 'Crea tu cuenta' : 'Inicia sesión para continuar'}
+          </p>
+        </div>
 
         <button
-          onClick={signInWithGoogle}
-          className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] px-4 py-3 font-medium transition hover:bg-gray-50"
+          onClick={handleGoogleSignIn}
+          disabled={loading}
+          className="w-full flex items-center justify-center gap-2 border border-gray-300 bg-white px-4 py-3 rounded-xl font-medium text-gray-700 hover:bg-gray-50 transition disabled:opacity-50"
         >
           Continuar con Google
         </button>
 
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-[var(--color-border)]" />
-          </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="bg-[var(--color-bg)] px-2 text-[var(--color-text-light)]">
-              o
-            </span>
-          </div>
+        <div className="relative flex items-center">
+          <div className="flex-1 border-t border-gray-200" />
+          <span className="px-3 text-xs text-gray-400">o con email</span>
+          <div className="flex-1 border-t border-gray-200" />
         </div>
 
-        <form onSubmit={handleEmailSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3">
+          {isSignUp && (
+            <>
+              <input
+                type="text"
+                placeholder="Nombre completo"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                required
+                className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <div>
+                <label className="block text-xs text-gray-500 mb-1 ml-1">Fecha de nacimiento</label>
+                <input
+                  type="date"
+                  value={birthday}
+                  onChange={(e) => setBirthday(e.target.value)}
+                  required
+                  className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </>
+          )}
+
           <input
             type="email"
-            placeholder="Email"
+            placeholder="Correo electrónico"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="w-full rounded-lg border border-[var(--color-border)] px-4 py-3"
+            className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
           <input
             type="password"
@@ -70,27 +132,30 @@ export default function LoginPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            className="w-full rounded-lg border border-[var(--color-border)] px-4 py-3"
+            className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
+
           {error && <p className="text-sm text-red-600">{error}</p>}
+
           <button
             type="submit"
-            className="w-full rounded-lg bg-[var(--color-primary)] px-4 py-3 font-medium text-white transition hover:bg-[var(--color-primary-dark)]"
+            disabled={loading}
+            className="w-full bg-blue-600 text-white py-3 rounded-xl font-medium hover:bg-blue-700 transition disabled:opacity-50"
           >
-            {isSignUp ? "Crear cuenta" : "Entrar"}
+            {loading ? 'Cargando...' : isSignUp ? 'Crear cuenta' : 'Entrar'}
           </button>
         </form>
 
-        <p className="text-center text-sm text-[var(--color-text-light)]">
-          {isSignUp ? "¿Ya tienes cuenta?" : "¿No tienes cuenta?"}{" "}
+        <p className="text-center text-sm text-gray-500">
+          {isSignUp ? '¿Ya tienes cuenta?' : '¿No tienes cuenta?'}{' '}
           <button
-            onClick={() => setIsSignUp(!isSignUp)}
-            className="text-[var(--color-primary)] hover:underline"
+            onClick={() => { setIsSignUp(!isSignUp); setError(''); }}
+            className="text-blue-600 hover:underline font-medium"
           >
-            {isSignUp ? "Iniciar sesión" : "Crear cuenta"}
+            {isSignUp ? 'Iniciar sesión' : 'Crear cuenta'}
           </button>
         </p>
       </div>
-    </main>
+    </div>
   );
 }
