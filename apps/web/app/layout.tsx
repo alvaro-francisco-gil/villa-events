@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { BottomNav } from '@/components/common/BottomNav';
+import { ProfileGuard } from '@/components/auth/ProfileGuard';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -13,8 +14,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="es">
       <body className="bg-gray-50 text-gray-900">
         <AuthProvider>
-          <main className="pb-20 max-w-lg mx-auto min-h-screen">{children}</main>
-          <BottomNav />
+          <ProfileGuard>
+            <main className="pb-20 max-w-lg mx-auto min-h-screen">{children}</main>
+            <BottomNav />
+          </ProfileGuard>
         </AuthProvider>
       </body>
     </html>

@@ -3,12 +3,12 @@
 import { use, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { validateInviteToken, consumeInviteToken } from '@villa-events/shared/services/inviteTokenService';
-import { addVillageMember, isVillageMember } from '@villa-events/shared/services/villageMemberService';
+import { acceptInvite, validateInviteToken } from '@villa-events/shared/services/inviteTokenService';
+import { isVillageMember } from '@villa-events/shared/services/villageMemberService';
 import { getVillage } from '@villa-events/shared/services/villageService';
 import type { VillageData } from '@villa-events/shared/models/village';
 import { useAuth } from '@/hooks/useAuth';
-import { CheckCircle, XCircle, Loader } from 'lucide-react';
+import { CheckCircle, XCircle, Loader, MapPin } from 'lucide-react';
 
 interface InvitePageProps {
   params: Promise<{ token: string }>;
@@ -16,11 +16,13 @@ interface InvitePageProps {
 
 type State = 'loading' | 'invalid' | 'already-member' | 'joining' | 'joined' | 'unauthenticated' | 'error';
 
+const PENDING_INVITE_KEY = 'villa-events:pendingInvite';
+
 export default function InvitePage({ params }: InvitePageProps) {
   const { token } = use(params);
   const searchParams = useSearchParams();
   const villageId = searchParams.get('v') ?? '';
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, refreshProfile } = useAuth();
   const router = useRouter();
 
   const [state, setState] = useState<State>('loading');
@@ -48,23 +50,39 @@ export default function InvitePage({ params }: InvitePageProps) {
         }
 
         if (!user) {
+          // Persist intent so the auth flow can return here once done.
+          if (typeof window !== 'undefined') {
+            sessionStorage.setItem(
+              PENDING_INVITE_KEY,
+              `/invite/${token}?v=${villageId}`,
+            );
+          }
           setState('unauthenticated');
           return;
         }
 
+        // Quick check to give immediate "already member" feedback (avoids
+        // a function call when not needed). The Cloud Function is also
+        // idempotent, so this is purely UX.
         const alreadyMember = await isVillageMember(villageId, user.uid);
         if (alreadyMember) {
           setState('already-member');
           return;
         }
 
-        // Auto-join
+        // Auto-join via Cloud Function (server-side validates the token and
+        // performs all writes atomically).
         setState('joining');
-        await addVillageMember(villageId, user.uid, 'user');
-        await consumeInviteToken(villageId, token);
-        setState('joined');
+        const result = await acceptInvite(villageId, token);
+        await refreshProfile();
 
-        setTimeout(() => router.push(`/village/${villageId}`), 2000);
+        // Clear pending invite once consumed.
+        if (typeof window !== 'undefined') {
+          sessionStorage.removeItem(PENDING_INVITE_KEY);
+        }
+
+        setState(result.alreadyMember ? 'already-member' : 'joined');
+        setTimeout(() => router.push(`/village/${villageId}`), 1500);
       } catch (e) {
         setErrorMsg(e instanceof Error ? e.message : 'Error desconocido');
         setState('error');
@@ -72,7 +90,7 @@ export default function InvitePage({ params }: InvitePageProps) {
     }
 
     validate();
-  }, [authLoading, user, villageId, token, router]);
+  }, [authLoading, user, villageId, token, router, refreshProfile]);
 
   if (state === 'loading' || authLoading) {
     return (
@@ -85,18 +103,24 @@ export default function InvitePage({ params }: InvitePageProps) {
 
   if (state === 'unauthenticated') {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen gap-4 px-4 text-center">
-        <div className="text-5xl">🏘️</div>
-        <h1 className="text-xl font-bold text-gray-900">
-          Invitación a {village?.name ?? 'un pueblo'}
-        </h1>
-        <p className="text-gray-600 text-sm">Para unirte, primero debes iniciar sesión.</p>
-        <Link
-          href={`/login?redirect=/invite/${token}?v=${villageId}`}
-          className="bg-blue-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-blue-700 transition"
-        >
-          Iniciar sesión
-        </Link>
+      <div className="min-h-screen px-4 py-8">
+        <div className="max-w-md mx-auto">
+          <VillageHeader village={village} />
+          <div className="mt-6 text-center">
+            <h1 className="text-xl font-bold text-gray-900">
+              Te han invitado a {village?.name ?? 'este pueblo'}
+            </h1>
+            <p className="text-gray-600 text-sm mt-2">
+              Inicia sesión o crea una cuenta para unirte.
+            </p>
+            <Link
+              href={`/login?redirect=/invite/${token}?v=${villageId}`}
+              className="inline-block mt-4 bg-blue-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-blue-700 transition"
+            >
+              Iniciar sesión
+            </Link>
+          </div>
+        </div>
       </div>
     );
   }
@@ -114,24 +138,34 @@ export default function InvitePage({ params }: InvitePageProps) {
 
   if (state === 'already-member') {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen gap-4 px-4 text-center">
-        <CheckCircle size={48} className="text-green-500" />
-        <h1 className="text-xl font-bold text-gray-900">Ya eres miembro</h1>
-        <p className="text-gray-600 text-sm">Ya perteneces a {village?.name ?? 'este pueblo'}.</p>
-        <Link href={`/village/${villageId}`} className="bg-blue-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-blue-700 transition">
-          Ir al pueblo
-        </Link>
+      <div className="min-h-screen px-4 py-8">
+        <div className="max-w-md mx-auto">
+          <VillageHeader village={village} />
+          <div className="mt-6 text-center">
+            <CheckCircle size={36} className="text-green-500 mx-auto mb-2" />
+            <h1 className="text-xl font-bold text-gray-900">Ya eres miembro</h1>
+            <p className="text-gray-600 text-sm mt-1">Ya perteneces a {village?.name ?? 'este pueblo'}.</p>
+            <Link href={`/village/${villageId}`} className="inline-block mt-4 bg-blue-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-blue-700 transition">
+              Ir al pueblo
+            </Link>
+          </div>
+        </div>
       </div>
     );
   }
 
   if (state === 'joined') {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen gap-4 px-4 text-center">
-        <CheckCircle size={48} className="text-green-500" />
-        <h1 className="text-xl font-bold text-gray-900">¡Bienvenido!</h1>
-        <p className="text-gray-600 text-sm">Te has unido a {village?.name ?? 'el pueblo'} correctamente.</p>
-        <p className="text-xs text-gray-400">Redirigiendo...</p>
+      <div className="min-h-screen px-4 py-8">
+        <div className="max-w-md mx-auto">
+          <VillageHeader village={village} />
+          <div className="mt-6 text-center">
+            <CheckCircle size={36} className="text-green-500 mx-auto mb-2" />
+            <h1 className="text-xl font-bold text-gray-900">¡Bienvenido!</h1>
+            <p className="text-gray-600 text-sm mt-1">Te has unido a {village?.name ?? 'el pueblo'} correctamente.</p>
+            <p className="text-xs text-gray-400 mt-1">Redirigiendo...</p>
+          </div>
+        </div>
       </div>
     );
   }
@@ -151,6 +185,55 @@ export default function InvitePage({ params }: InvitePageProps) {
       <h1 className="text-xl font-bold text-gray-900">Error</h1>
       <p className="text-gray-600 text-sm">{errorMsg}</p>
       <Link href="/" className="text-blue-600 hover:underline text-sm">Volver al inicio</Link>
+    </div>
+  );
+}
+
+function VillageHeader({ village }: { village: (VillageData & { id: string }) | null }) {
+  if (!village) {
+    return (
+      <div className="w-full h-44 bg-gradient-to-br from-blue-100 to-blue-200 rounded-2xl flex items-center justify-center">
+        <Loader size={28} className="animate-spin text-blue-400" />
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      {village.images.length > 0 ? (
+        <div className="space-y-2">
+          <img
+            src={village.images[0]}
+            alt={village.name}
+            className="w-full h-48 object-cover rounded-2xl"
+          />
+          {village.images.length > 1 && (
+            <div className="grid grid-cols-4 gap-2">
+              {village.images.slice(1, 5).map((url) => (
+                <img
+                  key={url}
+                  src={url}
+                  alt=""
+                  className="aspect-square w-full object-cover rounded-lg"
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="w-full h-44 bg-gradient-to-br from-blue-100 to-blue-200 rounded-2xl flex items-center justify-center">
+          <span className="text-blue-500 text-5xl font-bold">{village.name[0]}</span>
+        </div>
+      )}
+
+      <div className="mt-4 flex items-center gap-1 text-sm text-gray-500">
+        <MapPin size={14} />
+        <span>{village.provincia}, {village.comunidadAutonoma}</span>
+      </div>
+
+      {village.description && (
+        <p className="mt-2 text-sm text-gray-600 leading-relaxed">{village.description}</p>
+      )}
     </div>
   );
 }

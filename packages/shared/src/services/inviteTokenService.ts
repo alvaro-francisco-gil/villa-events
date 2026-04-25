@@ -10,7 +10,8 @@ import {
   Timestamp,
   increment,
 } from 'firebase/firestore';
-import { db } from '../firebase';
+import { httpsCallable } from 'firebase/functions';
+import { db, functions } from '../firebase';
 import type { InviteTokenData } from '../models/village/InviteTokenDataModel';
 import { isTokenExpired } from '../models/village/InviteTokenDataModel';
 
@@ -73,4 +74,53 @@ export async function deleteInviteToken(
   tokenId: string
 ): Promise<void> {
   await deleteDoc(doc(tokensCol(villageId), tokenId));
+}
+
+export interface AcceptInviteProfile {
+  displayName: string;
+  email: string;
+  birthday: Date;
+  photoURL?: string | null;
+}
+
+export interface AcceptInviteResult {
+  villageId: string;
+  alreadyMember: boolean;
+  profileCreated: boolean;
+}
+
+export async function acceptInvite(
+  villageId: string,
+  tokenId: string,
+  profile?: AcceptInviteProfile,
+): Promise<AcceptInviteResult> {
+  const callable = httpsCallable<
+    {
+      villageId: string;
+      tokenId: string;
+      profile?: {
+        displayName: string;
+        email: string;
+        birthday: string;
+        photoURL: string | null;
+      };
+    },
+    AcceptInviteResult
+  >(functions, 'acceptInvite');
+
+  const payload = profile
+    ? {
+        villageId,
+        tokenId,
+        profile: {
+          displayName: profile.displayName,
+          email: profile.email,
+          birthday: profile.birthday.toISOString().slice(0, 10),
+          photoURL: profile.photoURL ?? null,
+        },
+      }
+    : { villageId, tokenId };
+
+  const result = await callable(payload);
+  return result.data;
 }

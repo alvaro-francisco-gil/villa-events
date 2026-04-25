@@ -1,9 +1,12 @@
 'use client';
 
 import { use, useEffect, useState } from 'react';
+import Link from 'next/link';
+import { Settings } from 'lucide-react';
 import { getEvents } from '@villa-events/shared/services/eventService';
 import type { EventData } from '@villa-events/shared/models/event';
 import { useVillage } from '@/hooks/useVillage';
+import { useIsAppAdmin } from '@/hooks/useIsAppAdmin';
 import { EventCard } from '@/components/event/EventCard';
 import { SkeletonLoader } from '@/components/common/SkeletonLoader';
 
@@ -13,9 +16,12 @@ interface VillagePageProps {
 
 export default function VillagePage({ params }: VillagePageProps) {
   const { id: villageId } = use(params);
-  const { village, loading: villageLoading } = useVillage();
+  const { village, isAdmin, loading: villageLoading } = useVillage();
+  const { isAppAdmin } = useIsAppAdmin();
   const [events, setEvents] = useState<(EventData & { id: string })[]>([]);
   const [eventsLoading, setEventsLoading] = useState(true);
+
+  const canManage = isAdmin || isAppAdmin;
 
   useEffect(() => {
     getEvents(villageId, 'published')
@@ -46,8 +52,23 @@ export default function VillagePage({ params }: VillagePageProps) {
       {village.images[0] && (
         <img src={village.images[0]} alt={village.name} className="w-full h-40 object-cover rounded-xl mb-4" />
       )}
-      <h1 className="text-2xl font-bold text-gray-900">{village.name}</h1>
-      <p className="text-sm text-gray-500 mt-0.5">{village.provincia}, {village.comunidadAutonoma}</p>
+
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-bold text-gray-900">{village.name}</h1>
+          <p className="text-sm text-gray-500 mt-0.5">{village.provincia}, {village.comunidadAutonoma}</p>
+        </div>
+        {canManage && (
+          <Link
+            href={`/village/${villageId}/admin`}
+            className="shrink-0 flex items-center gap-1 text-sm text-blue-600 border border-blue-200 bg-blue-50 px-3 py-2 rounded-xl"
+            title="Coordinar pueblo"
+          >
+            <Settings size={15} /> Coordinar
+          </Link>
+        )}
+      </div>
+
       {village.description && (
         <p className="mt-2 text-sm text-gray-600">{village.description}</p>
       )}
