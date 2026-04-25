@@ -9,3 +9,6 @@ export * from './orgMemberService';
 export * from './eventService';
 export * from './registrationService';
 export * from './notificationService';
+export * from './imageService';
+export * from './censoService';
+export * from './membershipProfileService';

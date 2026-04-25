@@ -4,42 +4,62 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
-import { getUserProfile, updateUserProfile } from '@villa-events/shared/services/userService';
-import type { UserData } from '@villa-events/shared/models/user';
-import { User, Pencil, Users, LogOut } from 'lucide-react';
+import {
+  setActiveVillage,
+  updateUserProfile,
+} from '@villa-events/shared/services/userService';
+import {
+  getUserMemberships,
+  type UserMembership,
+} from '@villa-events/shared/services/villageMemberService';
+import { getVillage } from '@villa-events/shared/services/villageService';
+import type { VillageData } from '@villa-events/shared/models/village';
+import { User, Pencil, Users, LogOut, MapPin, ArrowRightLeft, Shield, Settings } from 'lucide-react';
 import { SkeletonLoader } from '@/components/common/SkeletonLoader';
+import { useIsAppAdmin } from '@/hooks/useIsAppAdmin';
+import { VillageCensoSection } from '@/components/profile/VillageCensoSection';
+
+type VillageSummary = VillageData & { id: string };
 
 export default function ProfilePage() {
-  const { user, loading: authLoading, signOut } = useAuth();
+  const { user, loading: authLoading, signOut, profile, refreshProfile } = useAuth();
+  const { isAppAdmin } = useIsAppAdmin();
   const router = useRouter();
 
-  const [profile, setProfile] = useState<(UserData & { id: string }) | null>(null);
-  const [profileLoading, setProfileLoading] = useState(true);
   const [editMode, setEditMode] = useState(false);
   const [telephone, setTelephone] = useState('');
   const [biography, setBiography] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
+  const [memberships, setMemberships] = useState<UserMembership[]>([]);
+  const [villagesById, setVillagesById] = useState<Record<string, VillageSummary>>({});
+  const [showSwitch, setShowSwitch] = useState(false);
+  const [switching, setSwitching] = useState(false);
+
   useEffect(() => {
-    if (!authLoading && !user) {
-      router.push('/login');
-    }
+    if (!authLoading && !user) router.push('/login');
   }, [user, authLoading, router]);
 
   useEffect(() => {
-    if (user) {
-      getUserProfile(user.uid)
-        .then((p) => {
-          setProfile(p);
-          if (p) {
-            setTelephone(p.telephone ?? '');
-            setBiography(p.biography ?? '');
-          }
-        })
-        .finally(() => setProfileLoading(false));
+    if (profile) {
+      setTelephone(profile.telephone ?? '');
+      setBiography(profile.biography ?? '');
     }
-  }, [user]);
+  }, [profile]);
+
+  useEffect(() => {
+    if (!user) return;
+    getUserMemberships(user.uid).then(async (mems) => {
+      setMemberships(mems);
+      const ids = new Set(mems.map((m) => m.villageId));
+      if (profile?.activeVillageId) ids.add(profile.activeVillageId);
+      const villages = await Promise.all(Array.from(ids).map((id) => getVillage(id)));
+      const map: Record<string, VillageSummary> = {};
+      villages.forEach((v) => { if (v) map[v.id] = v; });
+      setVillagesById(map);
+    });
+  }, [user, profile?.activeVillageId]);
 
   const handleSave = async () => {
     if (!user) return;
@@ -50,7 +70,7 @@ export default function ProfilePage() {
         telephone: telephone.trim() || null,
         biography: biography.trim() || null,
       });
-      setProfile((prev) => prev ? { ...prev, telephone: telephone.trim() || null, biography: biography.trim() || null } : prev);
+      await refreshProfile();
       setEditMode(false);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Error al guardar');
@@ -64,7 +84,19 @@ export default function ProfilePage() {
     router.push('/');
   };
 
-  if (authLoading || profileLoading) {
+  const handleSwitchVillage = async (villageId: string) => {
+    if (!user || villageId === profile?.activeVillageId) return;
+    setSwitching(true);
+    try {
+      await setActiveVillage(user.uid, villageId);
+      await refreshProfile();
+      router.push(`/village/${villageId}`);
+    } finally {
+      setSwitching(false);
+    }
+  };
+
+  if (authLoading || !profile) {
     return (
       <div className="px-4 py-6 space-y-4">
         <SkeletonLoader className="h-16 w-16 rounded-full" />
@@ -76,8 +108,12 @@ export default function ProfilePage() {
 
   if (!user) return null;
 
-  const displayName = profile?.displayName ?? user.displayName ?? 'Sin nombre';
-  const photoURL = profile?.photoURL ?? user.photoURL;
+  const displayName = profile.displayName ?? user.displayName ?? 'Sin nombre';
+  const photoURL = profile.photoURL ?? user.photoURL;
+  const activeVillage = profile.activeVillageId ? villagesById[profile.activeVillageId] : null;
+  const canSwitch = memberships.length >= 2;
+  const adminMemberships = memberships.filter((m) => m.role === 'admin');
+  const showManagementSection = isAppAdmin || adminMemberships.length > 0;
 
   return (
     <div className="px-4 py-6">
@@ -98,6 +134,59 @@ export default function ProfilePage() {
         </div>
       </div>
 
+      {/* My village */}
+      <div className="bg-white border border-gray-200 rounded-xl p-4 mb-4">
+        <div className="flex items-start gap-3">
+          <MapPin size={18} className="text-gray-500 mt-0.5" />
+          <div className="flex-1 min-w-0">
+            <p className="text-xs text-gray-500">Mi pueblo</p>
+            {activeVillage ? (
+              <Link href={`/village/${activeVillage.id}`} className="text-sm font-semibold text-gray-900 hover:underline">
+                {activeVillage.name}
+              </Link>
+            ) : (
+              <p className="text-sm text-gray-500">Aún no perteneces a ningún pueblo</p>
+            )}
+          </div>
+          {canSwitch && (
+            <button
+              onClick={() => setShowSwitch((v) => !v)}
+              className="text-blue-600 text-sm flex items-center gap-1"
+            >
+              <ArrowRightLeft size={13} /> Cambiar
+            </button>
+          )}
+        </div>
+
+        {showSwitch && canSwitch && (
+          <ul className="mt-3 space-y-1 border-t border-gray-100 pt-3">
+            {memberships.map((m) => {
+              const v = villagesById[m.villageId];
+              if (!v) return null;
+              const isActive = m.villageId === profile.activeVillageId;
+              return (
+                <li key={m.villageId}>
+                  <button
+                    type="button"
+                    onClick={() => handleSwitchVillage(m.villageId)}
+                    disabled={switching || isActive}
+                    className={`w-full text-left px-2 py-2 rounded-lg text-sm flex items-center justify-between ${
+                      isActive ? 'bg-blue-50 text-blue-700' : 'hover:bg-gray-50'
+                    } disabled:cursor-default`}
+                  >
+                    <span>
+                      <span className="font-medium">{v.name}</span>
+                      <span className="text-xs text-gray-400 ml-2">{v.provincia}</span>
+                    </span>
+                    {isActive && <span className="text-xs">Actual</span>}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
+
       {/* Profile details */}
       <div className="bg-white border border-gray-200 rounded-xl p-4 mb-4">
         {!editMode ? (
@@ -110,11 +199,11 @@ export default function ProfilePage() {
             </div>
             <div>
               <p className="text-xs text-gray-500">Teléfono</p>
-              <p className="text-sm text-gray-900">{profile?.telephone ?? 'No añadido'}</p>
+              <p className="text-sm text-gray-900">{profile.telephone ?? 'No añadido'}</p>
             </div>
             <div>
               <p className="text-xs text-gray-500">Biografía</p>
-              <p className="text-sm text-gray-900 whitespace-pre-line">{profile?.biography ?? 'No añadida'}</p>
+              <p className="text-sm text-gray-900 whitespace-pre-line">{profile.biography ?? 'No añadida'}</p>
             </div>
           </div>
         ) : (
@@ -153,6 +242,15 @@ export default function ProfilePage() {
         )}
       </div>
 
+      {/* Censo per village */}
+      {memberships.map((m) => (
+        <VillageCensoSection
+          key={m.villageId}
+          villageId={m.villageId}
+          userId={user.uid}
+        />
+      ))}
+
       {/* Link to personas */}
       <Link href="/profile/personas" className="flex items-center justify-between bg-white border border-gray-200 rounded-xl p-4 mb-4 hover:bg-gray-50 transition">
         <div className="flex items-center gap-3">
@@ -161,6 +259,49 @@ export default function ProfilePage() {
         </div>
         <span className="text-gray-400 text-lg">›</span>
       </Link>
+
+      {/* Management tools */}
+      {showManagementSection && (
+        <div className="bg-white border border-gray-200 rounded-xl mb-4 overflow-hidden">
+          <div className="px-4 pt-3 pb-1">
+            <h3 className="text-xs uppercase tracking-wide font-semibold text-gray-400">Herramientas de gestión</h3>
+          </div>
+
+          {isAppAdmin && (
+            <Link href="/admin" className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 border-t border-gray-100 transition">
+              <div className="flex items-center gap-3">
+                <Shield size={18} className="text-purple-600" />
+                <div>
+                  <p className="text-sm font-medium text-gray-900">Administración global</p>
+                  <p className="text-xs text-gray-500">Crear y editar pueblos</p>
+                </div>
+              </div>
+              <span className="text-gray-400 text-lg">›</span>
+            </Link>
+          )}
+
+          {adminMemberships.map((m) => {
+            const v = villagesById[m.villageId];
+            if (!v) return null;
+            return (
+              <Link
+                key={m.villageId}
+                href={`/village/${m.villageId}/admin`}
+                className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 border-t border-gray-100 transition"
+              >
+                <div className="flex items-center gap-3">
+                  <Settings size={18} className="text-blue-600" />
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">Coordinar {v.name}</p>
+                    <p className="text-xs text-gray-500">Invitaciones, organizaciones, miembros</p>
+                  </div>
+                </div>
+                <span className="text-gray-400 text-lg">›</span>
+              </Link>
+            );
+          })}
+        </div>
+      )}
 
       {/* Sign out */}
       <button

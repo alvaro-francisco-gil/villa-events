@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { getEvent } from '@villa-events/shared/services/eventService';
 import { cancelRegistration } from '@villa-events/shared/services/registrationService';
 import { getUserProfile } from '@villa-events/shared/services/userService';
+import { missingRequiredAnswers } from '@villa-events/shared/services/censoService';
 import type { EventData } from '@villa-events/shared/models/event';
 import type { UserData } from '@villa-events/shared/models/user';
 import { useVillage } from '@/hooks/useVillage';
@@ -23,7 +24,7 @@ interface EventPageProps {
 export default function EventDetailPage({ params }: EventPageProps) {
   const { id: villageId, eventId } = use(params);
   const { user } = useAuth();
-  const { isMember } = useVillage();
+  const { isMember, village, membership } = useVillage();
 
   const [event, setEvent] = useState<(EventData & { id: string }) | null>(null);
   const [eventLoading, setEventLoading] = useState(true);
@@ -142,17 +143,37 @@ export default function EventDetailPage({ params }: EventPageProps) {
         )}
 
         {/* Sign up button */}
-        {isOpen && user && (
-          <div className="space-y-2">
-            <button
-              onClick={() => setShowSignUpModal(true)}
-              disabled={isFull}
-              className="w-full bg-blue-600 text-white py-3 rounded-xl font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
-            >
-              {isFull ? 'Evento completo' : 'Inscribirse'}
-            </button>
-          </div>
-        )}
+        {isOpen && user && (() => {
+          const censoFields = village?.profileForm?.fields ?? [];
+          const answers = membership?.profileAnswers ?? {};
+          const missingCenso = missingRequiredAnswers(censoFields, answers);
+          if (missingCenso.length > 0) {
+            return (
+              <div className="space-y-2">
+                <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 px-3 py-2 rounded-lg">
+                  Antes de inscribirte, completa el censo del pueblo.
+                </p>
+                <Link
+                  href={`/village/${villageId}/censo?return=${encodeURIComponent(`/village/${villageId}/event/${eventId}`)}`}
+                  className="block w-full text-center bg-blue-600 text-white py-3 rounded-xl font-medium hover:bg-blue-700 transition"
+                >
+                  Completar censo
+                </Link>
+              </div>
+            );
+          }
+          return (
+            <div className="space-y-2">
+              <button
+                onClick={() => setShowSignUpModal(true)}
+                disabled={isFull}
+                className="w-full bg-blue-600 text-white py-3 rounded-xl font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+              >
+                {isFull ? 'Evento completo' : 'Inscribirse'}
+              </button>
+            </div>
+          );
+        })()}
 
         {!user && isOpen && (
           <Link href="/login" className="block w-full text-center bg-blue-600 text-white py-3 rounded-xl font-medium hover:bg-blue-700 transition">

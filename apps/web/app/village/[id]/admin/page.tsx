@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
 import { useVillage } from '@/hooks/useVillage';
+import { useIsAppAdmin } from '@/hooks/useIsAppAdmin';
 import {
   getOrganizations,
   approveOrganization,
@@ -21,7 +22,7 @@ import type { OrganizationData } from '@villa-events/shared/models/organization'
 import type { InviteTokenData } from '@villa-events/shared/models/village';
 import { OrgCard } from '@/components/organization/OrgCard';
 import { SkeletonLoader } from '@/components/common/SkeletonLoader';
-import { ArrowLeft, Plus, Copy, Trash2, Users, Link as LinkIcon } from 'lucide-react';
+import { ArrowLeft, Plus, Copy, Trash2, Users, Link as LinkIcon, ClipboardList } from 'lucide-react';
 
 interface AdminPageProps {
   params: Promise<{ id: string }>;
@@ -31,7 +32,9 @@ export default function VillageAdminPage({ params }: AdminPageProps) {
   const { id: villageId } = use(params);
   const { user } = useAuth();
   const { isAdmin, loading: villageLoading } = useVillage();
+  const { isAppAdmin, loading: appAdminLoading } = useIsAppAdmin();
   const router = useRouter();
+  const canManage = isAdmin || isAppAdmin;
 
   const [orgs, setOrgs] = useState<(OrganizationData & { id: string })[]>([]);
   const [tokens, setTokens] = useState<(InviteTokenData & { id: string })[]>([]);
@@ -41,13 +44,12 @@ export default function VillageAdminPage({ params }: AdminPageProps) {
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!villageLoading && !isAdmin) {
-      router.push(`/village/${villageId}`);
-    }
-  }, [isAdmin, villageLoading, router, villageId]);
+    if (villageLoading || appAdminLoading) return;
+    if (!canManage) router.push(`/village/${villageId}`);
+  }, [canManage, villageLoading, appAdminLoading, router, villageId]);
 
   useEffect(() => {
-    if (!isAdmin) return;
+    if (!canManage) return;
     async function load() {
       const [allOrgs, allTokens, members] = await Promise.all([
         getOrganizations(villageId),
@@ -60,7 +62,7 @@ export default function VillageAdminPage({ params }: AdminPageProps) {
       setLoading(false);
     }
     load();
-  }, [villageId, isAdmin]);
+  }, [villageId, canManage]);
 
   const handleApprove = async (orgId: string) => {
     await approveOrganization(villageId, orgId);
@@ -106,7 +108,7 @@ export default function VillageAdminPage({ params }: AdminPageProps) {
     setTokens((prev) => prev.filter((t) => t.id !== tokenId));
   };
 
-  if (villageLoading || loading) {
+  if (villageLoading || appAdminLoading || loading) {
     return (
       <div className="px-4 py-6 space-y-4">
         <SkeletonLoader className="h-8 w-48" />
@@ -116,7 +118,7 @@ export default function VillageAdminPage({ params }: AdminPageProps) {
     );
   }
 
-  if (!isAdmin) return null;
+  if (!canManage) return null;
 
   const pendingOrgs = orgs.filter((o) => o.status === 'pending');
   const approvedOrgs = orgs.filter((o) => o.status === 'approved');
@@ -127,16 +129,28 @@ export default function VillageAdminPage({ params }: AdminPageProps) {
         <ArrowLeft size={16} /> Volver al pueblo
       </Link>
 
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Panel de administración</h1>
+      <h1 className="text-2xl font-bold text-gray-900 mb-6">Coordinación del pueblo</h1>
 
       {/* Stats */}
-      <div className="bg-white border border-gray-200 rounded-xl p-4 mb-6 flex items-center gap-3">
+      <div className="bg-white border border-gray-200 rounded-xl p-4 mb-4 flex items-center gap-3">
         <Users size={20} className="text-blue-500 shrink-0" />
         <div>
           <p className="text-sm font-semibold text-gray-900">{memberCount} {memberCount === 1 ? 'miembro' : 'miembros'}</p>
           <p className="text-xs text-gray-500">en este pueblo</p>
         </div>
       </div>
+
+      {/* Censo link */}
+      <Link
+        href={`/village/${villageId}/admin/censo`}
+        className="bg-white border border-gray-200 rounded-xl p-4 mb-6 flex items-center gap-3 hover:border-blue-400 hover:bg-blue-50 transition"
+      >
+        <ClipboardList size={20} className="text-blue-500 shrink-0" />
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-gray-900">Censo del pueblo</p>
+          <p className="text-xs text-gray-500">Define las preguntas que los miembros deben responder.</p>
+        </div>
+      </Link>
 
       {/* Invite tokens */}
       <div className="mb-8">

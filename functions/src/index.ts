@@ -5,3 +5,4 @@ export { onRegistrationDeleted } from './waitlistPromotion';
 export { completeExpiredEvents } from './eventCompletion';
 export { onEventUpdated } from './notificationTriggers';
 export { acceptInvite } from './acceptInvite';
+export { updateCenso } from './updateCenso';
