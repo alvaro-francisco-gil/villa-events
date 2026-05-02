@@ -82,10 +82,10 @@ export async function approveOrganization(orgId: string, approvedBy: string): Pr
   });
 }
 
-export async function rejectOrganization(orgId: string, decidedBy: string): Promise<void> {
+export async function rejectOrganization(orgId: string): Promise<void> {
   await updateDoc(doc(orgsCol(), orgId), {
     status: 'rejected',
-    approvedBy: decidedBy,
+    approvedBy: null,
     decidedAt: serverTimestamp(),
   });
 }
