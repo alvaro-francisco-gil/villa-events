@@ -14,7 +14,7 @@ import {
 } from '@villa-events/shared/services/villageMemberService';
 import { getVillage } from '@villa-events/shared/services/villageService';
 import type { VillageData } from '@villa-events/shared/models/village';
-import { User, Pencil, Users, LogOut, MapPin, ArrowRightLeft, Shield, Settings } from 'lucide-react';
+import { User, Pencil, Users, LogOut, MapPin, Shield, Settings } from 'lucide-react';
 import { SkeletonLoader } from '@/components/common/SkeletonLoader';
 import { useIsAppAdmin } from '@/hooks/useIsAppAdmin';
 import { VillageCensoSection } from '@/components/profile/VillageCensoSection';
@@ -34,7 +34,6 @@ export default function ProfilePage() {
 
   const [memberships, setMemberships] = useState<UserMembership[]>([]);
   const [villagesById, setVillagesById] = useState<Record<string, VillageSummary>>({});
-  const [showSwitch, setShowSwitch] = useState(false);
   const [switching, setSwitching] = useState(false);
 
   useEffect(() => {
@@ -110,8 +109,6 @@ export default function ProfilePage() {
 
   const displayName = profile.displayName ?? user.displayName ?? 'Sin nombre';
   const photoURL = profile.photoURL ?? user.photoURL;
-  const activeVillage = profile.activeVillageId ? villagesById[profile.activeVillageId] : null;
-  const canSwitch = memberships.length >= 2;
   const adminMemberships = memberships.filter((m) => m.role === 'admin');
   const showManagementSection = isAppAdmin || adminMemberships.length > 0;
 
@@ -134,52 +131,38 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* My village */}
+      {/* My villages */}
       <div className="bg-white border border-gray-200 rounded-xl p-4 mb-4">
-        <div className="flex items-start gap-3">
-          <MapPin size={18} className="text-gray-500 mt-0.5" />
-          <div className="flex-1 min-w-0">
-            <p className="text-xs text-gray-500">Mi pueblo</p>
-            {activeVillage ? (
-              <Link href={`/village/${activeVillage.id}`} className="text-sm font-semibold text-gray-900 hover:underline">
-                {activeVillage.name}
-              </Link>
-            ) : (
-              <p className="text-sm text-gray-500">Aún no perteneces a ningún pueblo</p>
-            )}
-          </div>
-          {canSwitch && (
-            <button
-              onClick={() => setShowSwitch((v) => !v)}
-              className="text-blue-600 text-sm flex items-center gap-1"
-            >
-              <ArrowRightLeft size={13} /> Cambiar
-            </button>
-          )}
+        <div className="flex items-center gap-2 mb-3">
+          <MapPin size={18} className="text-gray-500" />
+          <p className="text-sm font-semibold text-gray-900">Mis pueblos</p>
         </div>
-
-        {showSwitch && canSwitch && (
-          <ul className="mt-3 space-y-1 border-t border-gray-100 pt-3">
+        {memberships.length === 0 ? (
+          <p className="text-sm text-gray-500">Aún no perteneces a ningún pueblo.</p>
+        ) : (
+          <ul className="space-y-2">
             {memberships.map((m) => {
               const v = villagesById[m.villageId];
               if (!v) return null;
               const isActive = m.villageId === profile.activeVillageId;
               return (
-                <li key={m.villageId}>
-                  <button
-                    type="button"
-                    onClick={() => handleSwitchVillage(m.villageId)}
-                    disabled={switching || isActive}
-                    className={`w-full text-left px-2 py-2 rounded-lg text-sm flex items-center justify-between ${
-                      isActive ? 'bg-blue-50 text-blue-700' : 'hover:bg-gray-50'
-                    } disabled:cursor-default`}
-                  >
-                    <span>
-                      <span className="font-medium">{v.name}</span>
-                      <span className="text-xs text-gray-400 ml-2">{v.provincia}</span>
-                    </span>
-                    {isActive && <span className="text-xs">Actual</span>}
-                  </button>
+                <li key={m.villageId} className="flex items-center justify-between">
+                  <Link href={`/village/${m.villageId}`} className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900">{v.name}</p>
+                    <p className="text-xs text-gray-400">{v.provincia}</p>
+                  </Link>
+                  {isActive ? (
+                    <span className="text-xs text-blue-700 px-2 py-0.5 rounded-full bg-blue-50">Principal</span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => handleSwitchVillage(m.villageId)}
+                      disabled={switching}
+                      className="text-xs text-blue-600 hover:underline disabled:opacity-50"
+                    >
+                      Hacer principal
+                    </button>
+                  )}
                 </li>
               );
             })}
