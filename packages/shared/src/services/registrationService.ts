@@ -1,9 +1,7 @@
 import {
   collection,
   doc,
-  getDoc,
   getDocs,
-  setDoc,
   deleteDoc,
   query,
   orderBy,
@@ -23,8 +21,8 @@ export interface RegisterInput {
   name: string;
 }
 
-function regsCol(villageId: string, eventId: string) {
-  return collection(db, 'villages', villageId, 'events', eventId, 'registrations');
+function regsCol(eventId: string) {
+  return collection(db, 'events', eventId, 'registrations');
 }
 
 function mapRegDoc(
@@ -55,53 +53,44 @@ export function determineRegistrationStatus(
 }
 
 export async function getEventRegistrations(
-  villageId: string,
   eventId: string
 ): Promise<(RegistrationData & { id: string })[]> {
-  const q = query(regsCol(villageId, eventId), orderBy('position', 'asc'));
+  const q = query(regsCol(eventId), orderBy('position', 'asc'));
   const snap = await getDocs(q);
   return snap.docs.map((d) => mapRegDoc(d as Parameters<typeof mapRegDoc>[0]));
 }
 
-export async function getConfirmedCount(
-  villageId: string,
-  eventId: string
-): Promise<number> {
-  const q = query(regsCol(villageId, eventId), where('status', '==', 'confirmed'));
+export async function getConfirmedCount(eventId: string): Promise<number> {
+  const q = query(regsCol(eventId), where('status', '==', 'confirmed'));
   const snap = await getCountFromServer(q);
   return snap.data().count;
 }
 
-export async function getTotalCount(
-  villageId: string,
-  eventId: string
-): Promise<number> {
-  const snap = await getCountFromServer(regsCol(villageId, eventId));
+export async function getTotalCount(eventId: string): Promise<number> {
+  const snap = await getCountFromServer(regsCol(eventId));
   return snap.data().count;
 }
 
 export async function getUserRegistrations(
-  villageId: string,
   eventId: string,
   userId: string
 ): Promise<(RegistrationData & { id: string })[]> {
-  const q = query(regsCol(villageId, eventId), where('userId', '==', userId));
+  const q = query(regsCol(eventId), where('userId', '==', userId));
   const snap = await getDocs(q);
   return snap.docs.map((d) => mapRegDoc(d as Parameters<typeof mapRegDoc>[0]));
 }
 
 export async function registerToEvent(
-  villageId: string,
   eventId: string,
   inputs: RegisterInput[],
   maxAttendees: number | null
 ): Promise<void> {
-  const confirmedCount = await getConfirmedCount(villageId, eventId);
-  const totalCount = await getTotalCount(villageId, eventId);
+  const confirmedCount = await getConfirmedCount(eventId);
+  const totalCount = await getTotalCount(eventId);
 
   const batch = writeBatch(db);
   inputs.forEach((input, i) => {
-    const newRef = doc(regsCol(villageId, eventId));
+    const newRef = doc(regsCol(eventId));
     const position = totalCount + i + 1;
     const status = determineRegistrationStatus(maxAttendees, confirmedCount + i);
     batch.set(newRef, {
@@ -116,15 +105,16 @@ export async function registerToEvent(
   await batch.commit();
 }
 
-export async function cancelRegistration(
-  villageId: string,
-  eventId: string,
-  regId: string
-): Promise<void> {
-  await deleteDoc(doc(regsCol(villageId, eventId), regId));
+export async function cancelRegistration(eventId: string, regId: string): Promise<void> {
+  await deleteDoc(doc(regsCol(eventId), regId));
 }
 
-export async function getUserRegistrationsAcrossVillages(
+/**
+ * Cross-event registrations for a single user. After the migration,
+ * registrations live at events/{eventId}/registrations/{regId}, so the
+ * eventPath returned is `events/{eventId}`.
+ */
+export async function getUserRegistrationsAcrossEvents(
   userId: string
 ): Promise<(RegistrationData & { id: string; eventPath: string })[]> {
   const q = query(
@@ -135,9 +125,9 @@ export async function getUserRegistrationsAcrossVillages(
   const snap = await getDocs(q);
   return snap.docs.map((d) => {
     const data = d.data();
-    // ref path: villages/{villageId}/events/{eventId}/registrations/{regId}
+    // ref path: events/{eventId}/registrations/{regId}
     const pathSegments = d.ref.path.split('/');
-    const eventPath = pathSegments.slice(0, 4).join('/');
+    const eventPath = pathSegments.slice(0, 2).join('/');
     return {
       id: d.id,
       userId: data['userId'] as string,
