@@ -3,38 +3,26 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    function isAuthenticated() {
-      return request.auth != null;
-    }
-
-    function isOwner(userId) {
-      return isAuthenticated() && request.auth.uid == userId;
-    }
-
+    function isAuthenticated() { return request.auth != null; }
+    function isOwner(userId) { return isAuthenticated() && request.auth.uid == userId; }
     function isAppAdmin() {
-      return isAuthenticated() && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+      return isAuthenticated() &&
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid));
     }
-
     function isVillageAdmin(villageId) {
       return isAuthenticated() &&
         get(/databases/$(database)/documents/villages/$(villageId)/members/$(request.auth.uid)).data.role == 'admin';
     }
-
     function isVillageMember(villageId) {
       return isAuthenticated() &&
         exists(/databases/$(database)/documents/villages/$(villageId)/members/$(request.auth.uid));
     }
-
-    function isOrgMember(villageId, orgId) {
+    function isOrgMember(orgId) {
       return isAuthenticated() &&
-        exists(/databases/$(database)/documents/villages/$(villageId)/organizations/$(orgId)/members/$(request.auth.uid));
+        exists(/databases/$(database)/documents/organizations/$(orgId)/members/$(request.auth.uid));
     }
-
-    function censoSatisfied(villageId) {
-      let village = get(/databases/$(database)/documents/villages/$(villageId)).data;
-      let hasForm = 'profileForm' in village && village.profileForm.fields.size() > 0;
-      return !hasForm
-        || get(/databases/$(database)/documents/villages/$(villageId)/members/$(request.auth.uid)).data.profileCompletedAt != null;
+    function orgVillageId(orgId) {
+      return get(/databases/$(database)/documents/organizations/$(orgId)).data.villageId;
     }
 
     match /admins/{userId} {
@@ -49,17 +37,14 @@ service cloud.firestore {
       allow delete: if false;
 
       match /personas/{personaId} {
-        allow read: if isOwner(userId);
-        allow create: if isOwner(userId);
-        allow update: if isOwner(userId);
-        allow delete: if isOwner(userId);
+        allow read, create, update, delete: if isOwner(userId);
       }
 
       match /notifications/{notifId} {
         allow read: if isOwner(userId);
-        allow update: if isOwner(userId) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
-        allow create: if false;
-        allow delete: if false;
+        allow update: if isOwner(userId)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
+        allow create, delete: if false;
       }
     }
 
@@ -70,26 +55,13 @@ service cloud.firestore {
       allow delete: if isAppAdmin();
 
       match /members/{userId} {
-        // Members are visible to other members of the same village, to the
-        // user themselves, and to admins. The role/joinedAt are unsensitive
-        // but profileAnswers are pueblo-only.
-        allow read: if isVillageMember(villageId)
-                    || isOwner(userId)
-                    || isVillageAdmin(villageId)
-                    || isAppAdmin();
-
-        // Member docs are created via the acceptInvite Cloud Function
-        // (admin SDK) for invites, or directly by a village admin.
+        allow read: if true;
         allow create: if isVillageAdmin(villageId) || isAppAdmin();
-
-        // Self can only update profileAnswers / profileCompletedAt.
-        // Admins (village or app) can update any field, e.g., role.
         allow update: if isVillageAdmin(villageId)
                        || isAppAdmin()
                        || (isOwner(userId)
                            && request.resource.data.diff(resource.data).affectedKeys()
                               .hasOnly(['profileAnswers', 'profileCompletedAt']));
-
         allow delete: if isVillageAdmin(villageId) || isAppAdmin() || isOwner(userId);
       }
 
@@ -99,36 +71,48 @@ service cloud.firestore {
         allow update: if isAuthenticated();
         allow delete: if isVillageAdmin(villageId) || isAppAdmin();
       }
+    }
 
-      match /organizations/{orgId} {
-        allow read: if isVillageMember(villageId) || isAppAdmin();
-        allow create: if isVillageMember(villageId);
-        allow update: if isVillageAdmin(villageId) || isAppAdmin();
-        allow delete: if isVillageAdmin(villageId) || isAppAdmin();
+    match /organizations/{orgId} {
+      allow read: if true;
+      allow create: if isAuthenticated()
+        && (isVillageMember(request.resource.data.villageId) || isAppAdmin())
+        && request.resource.data.status == 'pending';
+      allow update: if isVillageAdmin(resource.data.villageId) || isAppAdmin();
+      allow delete: if isVillageAdmin(resource.data.villageId) || isAppAdmin();
 
-        match /members/{memberId} {
-          allow read: if isVillageMember(villageId) || isAppAdmin();
-          allow create: if isOrgMember(villageId, orgId) || isVillageAdmin(villageId) || isAppAdmin();
-          allow delete: if isOrgMember(villageId, orgId) || isVillageAdmin(villageId) || isAppAdmin() || isOwner(memberId);
-        }
-      }
-
-      match /events/{eventId} {
+      match /members/{userId} {
         allow read: if true;
-        allow create: if isOrgMember(villageId, request.resource.data.organizationId) || isAppAdmin();
-        allow update: if isOrgMember(villageId, resource.data.organizationId) || isVillageAdmin(villageId) || isAppAdmin();
-        allow delete: if isOrgMember(villageId, resource.data.organizationId) || isVillageAdmin(villageId) || isAppAdmin();
+        allow create: if isOrgMember(orgId)
+          || isVillageAdmin(orgVillageId(orgId))
+          || isAppAdmin();
+        allow update: if false;
+        allow delete: if isOwner(userId)
+          || isVillageAdmin(orgVillageId(orgId))
+          || isAppAdmin();
+      }
+    }
 
-        match /registrations/{regId} {
-          allow read: if true;
-          // Registration requires that the village's censo is satisfied
-          // for the requesting user (or the village has no censo).
-          allow create: if isAuthenticated()
-                        && request.resource.data.userId == request.auth.uid
-                        && censoSatisfied(villageId);
-          allow update: if isAuthenticated() && resource.data.userId == request.auth.uid;
-          allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
-        }
+    match /events/{eventId} {
+      allow read: if true;
+      allow create: if isAuthenticated()
+        && isOrgMember(request.resource.data.organizationId)
+        && request.resource.data.villageId is string;
+      allow update: if isOrgMember(resource.data.organizationId)
+        || isVillageAdmin(resource.data.villageId)
+        || isAppAdmin();
+      allow delete: if isOrgMember(resource.data.organizationId)
+        || isVillageAdmin(resource.data.villageId)
+        || isAppAdmin();
+
+      match /registrations/{regId} {
+        allow read: if true;
+        allow create: if isAuthenticated()
+          && request.resource.data.userId == request.auth.uid;
+        allow update: if isAuthenticated()
+          && resource.data.userId == request.auth.uid;
+        allow delete: if isAuthenticated()
+          && resource.data.userId == request.auth.uid;
       }
     }
   }
