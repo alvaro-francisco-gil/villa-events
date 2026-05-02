@@ -2,7 +2,9 @@
 
 import { useState } from 'react';
 import { registerToEvent } from '@villa-events/shared/services/registrationService';
-import type { PersonaData, UserData } from '@villa-events/shared/models/user';
+import type { UserData } from '@villa-events/shared/models/user';
+import type { PersonData } from '@villa-events/shared/models/person';
+import { buildDisplayName } from '@villa-events/shared/models/person';
 import type { EventData } from '@villa-events/shared/models/event';
 import { X, Phone } from 'lucide-react';
 import type { User } from 'firebase/auth';
@@ -11,7 +13,7 @@ interface SignUpModalProps {
   event: EventData & { id: string };
   user: User;
   userProfile: (UserData & { id: string }) | null;
-  personas: (PersonaData & { id: string })[];
+  personas: (PersonData & { id: string })[];
   onClose: () => void;
   onSuccess: () => void;
 }
@@ -56,7 +58,7 @@ export function SignUpModal({
     for (const personaId of selectedPersonaIds) {
       const persona = personas.find((p) => p.id === personaId);
       if (persona) {
-        inputs.push({ userId: user.uid, personId: personaId, name: persona.name });
+        inputs.push({ userId: user.uid, personId: personaId, name: buildDisplayName(persona) });
       }
     }
 
@@ -128,7 +130,7 @@ export function SignUpModal({
                 className="accent-blue-600"
               />
               <div>
-                <p className="font-medium text-sm text-gray-900">{persona.name}</p>
+                <p className="font-medium text-sm text-gray-900">{buildDisplayName(persona)}</p>
                 <p className="text-xs text-gray-500">Familiar / acompañante</p>
               </div>
             </label>
