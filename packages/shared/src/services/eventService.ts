@@ -54,7 +54,7 @@ export function mapEventDoc(
     villageId: data['villageId'] as string,
     villageName: data['villageName'] as string,
     villageCoverImage: (data['villageCoverImage'] as string | null) ?? null,
-    villageCoordinates: data['villageCoordinates'] as GeoPoint,
+    villageCoordinates: (data['villageCoordinates'] as GeoPoint | null) ?? null,
   };
 }
 

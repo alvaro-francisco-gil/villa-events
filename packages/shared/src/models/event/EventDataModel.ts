@@ -23,7 +23,7 @@ export interface EventData {
   villageId: string;
   villageName: string;
   villageCoverImage: string | null;
-  villageCoordinates: GeoPoint;
+  villageCoordinates: GeoPoint | null;
 }
 
 export interface EventDataInput {
@@ -45,7 +45,7 @@ export interface EventDataInput {
   villageId: string;
   villageName: string;
   villageCoverImage?: string | null;
-  villageCoordinates: GeoPoint;
+  villageCoordinates: GeoPoint | null;
 }
 
 export function buildEventData(input: EventDataInput): EventData {
