@@ -31,7 +31,7 @@ function mapOrgDoc(d: { id: string; data: () => Record<string, unknown> }): Orga
     description: (data['description'] as string | null) ?? null,
     type: data['type'] as OrganizationData['type'],
     status: data['status'] as OrganizationStatus,
-    villageId: (data['villageId'] as string) ?? '',
+    villageId: data['villageId'] as string,
     requestedBy: data['requestedBy'] as string,
     approvedBy: (data['approvedBy'] as string | null) ?? null,
     createdAt: (data['createdAt'] as Timestamp).toDate(),
@@ -70,7 +70,10 @@ export async function requestOrganization(
     description: input.description ?? null,
     type: input.type,
     status: 'pending',
+    villageId: input.villageId,
     requestedBy: input.requestedBy,
+    approvedBy: null,
+    decidedAt: null,
     createdAt: serverTimestamp(),
   });
   return newRef.id;
@@ -78,16 +81,26 @@ export async function requestOrganization(
 
 export async function approveOrganization(
   villageId: string,
-  orgId: string
+  orgId: string,
+  approvedBy: string
 ): Promise<void> {
-  await updateDoc(doc(orgsCol(villageId), orgId), { status: 'approved' });
+  await updateDoc(doc(orgsCol(villageId), orgId), {
+    status: 'approved',
+    approvedBy,
+    decidedAt: serverTimestamp(),
+  });
 }
 
 export async function rejectOrganization(
   villageId: string,
-  orgId: string
+  orgId: string,
+  decidedBy: string
 ): Promise<void> {
-  await updateDoc(doc(orgsCol(villageId), orgId), { status: 'rejected' });
+  await updateDoc(doc(orgsCol(villageId), orgId), {
+    status: 'rejected',
+    approvedBy: decidedBy,
+    decidedAt: serverTimestamp(),
+  });
 }
 
 export async function updateOrganization(
