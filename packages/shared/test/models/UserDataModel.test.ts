@@ -30,4 +30,13 @@ describe('buildUserData', () => {
     expect(user.telephone).toBe('+34612345678');
     expect(user.photoURL).toBe('https://example.com/photo.jpg');
   });
+
+  it('defaults personId to null', () => {
+    const user = buildUserData({
+      displayName: 'Ana',
+      email: 'ana@test.com',
+      birthday: new Date('1990-01-01'),
+    })
+    expect(user.personId).toBeNull()
+  })
 });
