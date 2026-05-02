@@ -7,7 +7,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useVillage } from '@/hooks/useVillage';
 import { useIsAppAdmin } from '@/hooks/useIsAppAdmin';
 import {
-  getOrganizations,
+  getOrganizationsByVillage,
   approveOrganization,
   rejectOrganization,
 } from '@villa-events/shared/services/organizationService';
@@ -52,7 +52,7 @@ export default function VillageAdminPage({ params }: AdminPageProps) {
     if (!canManage) return;
     async function load() {
       const [allOrgs, allTokens, members] = await Promise.all([
-        getOrganizations(villageId),
+        getOrganizationsByVillage(villageId),
         getInviteTokens(villageId),
         getVillageMembers(villageId),
       ]);
@@ -65,17 +65,17 @@ export default function VillageAdminPage({ params }: AdminPageProps) {
   }, [villageId, canManage]);
 
   const handleApprove = async (orgId: string) => {
-    await approveOrganization(villageId, orgId);
+    await approveOrganization(orgId, user!.uid);
     // Also add the requester as org member
     const org = orgs.find((o) => o.id === orgId);
     if (org) {
-      await addOrgMember(villageId, orgId, org.requestedBy);
+      await addOrgMember(orgId, org.requestedBy);
     }
     setOrgs((prev) => prev.map((o) => o.id === orgId ? { ...o, status: 'approved' as const } : o));
   };
 
   const handleReject = async (orgId: string) => {
-    await rejectOrganization(villageId, orgId);
+    await rejectOrganization(orgId);
     setOrgs((prev) => prev.map((o) => o.id === orgId ? { ...o, status: 'rejected' as const } : o));
   };
 
@@ -235,7 +235,7 @@ export default function VillageAdminPage({ params }: AdminPageProps) {
         ) : (
           <div className="space-y-3">
             {approvedOrgs.map((org) => (
-              <Link key={org.id} href={`/village/${villageId}/org/${org.id}`}>
+              <Link key={org.id} href={`/org/${org.id}`}>
                 <OrgCard org={org} />
               </Link>
             ))}

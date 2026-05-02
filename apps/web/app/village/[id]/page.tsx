@@ -3,7 +3,7 @@
 import { use, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Settings } from 'lucide-react';
-import { getEvents } from '@villa-events/shared/services/eventService';
+import { getEventsByVillage } from '@villa-events/shared/services/eventService';
 import type { EventData } from '@villa-events/shared/models/event';
 import { useVillage } from '@/hooks/useVillage';
 import { useIsAppAdmin } from '@/hooks/useIsAppAdmin';
@@ -24,7 +24,7 @@ export default function VillagePage({ params }: VillagePageProps) {
   const canManage = isAdmin || isAppAdmin;
 
   useEffect(() => {
-    getEvents(villageId, 'published')
+    getEventsByVillage(villageId, 'published')
       .then(setEvents)
       .finally(() => setEventsLoading(false));
   }, [villageId]);
