@@ -150,6 +150,13 @@ export default function ProfilePage() {
                   <Link href={`/village/${m.villageId}`} className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-gray-900">{v.name}</p>
                     <p className="text-xs text-gray-400">{v.provincia}</p>
+                    {m.profileCompletedAt ? (
+                      <span className="text-xs text-emerald-600">Censo completo</span>
+                    ) : (
+                      <Link href={`/village/${m.villageId}/censo`} className="text-xs text-amber-600 hover:underline">
+                        Completar censo
+                      </Link>
+                    )}
                   </Link>
                   {isActive ? (
                     <span className="text-xs text-blue-700 px-2 py-0.5 rounded-full bg-blue-50">Principal</span>

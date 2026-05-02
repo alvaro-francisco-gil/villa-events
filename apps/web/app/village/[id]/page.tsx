@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { getVillage } from '@villa-events/shared/services/villageService';
 import { getEventsByVillage } from '@villa-events/shared/services/eventService';
 import { getOrganizationsByVillage } from '@villa-events/shared/services/organizationService';
-import { isVillageMember } from '@villa-events/shared/services/villageMemberService';
+import { isVillageMember, getVillageMember } from '@villa-events/shared/services/villageMemberService';
 import type { VillageData } from '@villa-events/shared/models/village';
 import type { EventData } from '@villa-events/shared/models/event';
 import type { OrganizationData } from '@villa-events/shared/models/organization';
@@ -23,6 +23,7 @@ export default function VillagePage() {
   const [events, setEvents] = useState<(EventData & { id: string })[]>([]);
   const [orgs, setOrgs] = useState<(OrganizationData & { id: string })[]>([]);
   const [isMember, setIsMember] = useState(false);
+  const [memberDoc, setMemberDoc] = useState<{ profileCompletedAt: Date | null } | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -32,12 +33,14 @@ export default function VillagePage() {
       getEventsByVillage(villageId, 'published'),
       getOrganizationsByVillage(villageId, 'approved'),
       user ? isVillageMember(villageId, user.uid) : Promise.resolve(false),
+      user ? getVillageMember(villageId, user.uid) : Promise.resolve(null),
     ])
-      .then(([v, evs, os, mem]) => {
+      .then(([v, evs, os, mem, mDoc]) => {
         setVillage(v);
         setEvents(evs);
         setOrgs(os);
-        setIsMember(mem);
+        setIsMember(mem as boolean);
+        setMemberDoc(mDoc ? { profileCompletedAt: (mDoc as { profileCompletedAt: Date | null }).profileCompletedAt } : null);
       })
       .finally(() => setLoading(false));
   }, [villageId, user]);
@@ -74,6 +77,15 @@ export default function VillagePage() {
         {!isMember && user && (
           <div className="mt-4 p-3 rounded-lg bg-blue-50 text-blue-800 text-sm">
             Eres visitante. Pídele a un coordinador un enlace de invitación para hacerte vecino.
+          </div>
+        )}
+
+        {isMember && memberDoc && !memberDoc.profileCompletedAt && (
+          <div className="mt-4 p-3 rounded-lg bg-amber-50 text-amber-800 text-sm">
+            Aún no has completado el censo de {village.name}.{' '}
+            <Link href={`/village/${village.id}/censo`} className="underline font-medium">
+              Completar ahora
+            </Link>
           </div>
         )}
 

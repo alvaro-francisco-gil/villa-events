@@ -91,6 +91,7 @@ export interface UserMembership {
   villageId: string;
   role: VillageMemberRole;
   joinedAt: Date;
+  profileCompletedAt: Date | null;
 }
 
 export async function getUserMemberships(userId: string): Promise<UserMembership[]> {
@@ -100,10 +101,12 @@ export async function getUserMemberships(userId: string): Promise<UserMembership
     .filter((d) => d.ref.parent.parent?.parent.id === 'villages')
     .map((d) => {
       const data = d.data();
+      const completedAtRaw = data['profileCompletedAt'];
       return {
         villageId: d.ref.parent.parent!.id,
         role: data['role'] as VillageMemberRole,
         joinedAt: (data['joinedAt'] as Timestamp).toDate(),
+        profileCompletedAt: completedAtRaw ? (completedAtRaw as Timestamp).toDate() : null,
       };
     });
 }
