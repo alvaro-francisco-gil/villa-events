@@ -9,7 +9,7 @@ import { getUnreadCount } from '@villa-events/shared/services/notificationServic
 
 const navItems = [
   { href: '/', icon: Home, label: 'Inicio' },
-  { href: '/my-signups', icon: CalendarCheck, label: 'Inscripciones', requiresAuth: true },
+  { href: '/my-signups', icon: CalendarCheck, label: 'Eventos', requiresAuth: true },
   { href: '/notifications', icon: Bell, label: 'Notificaciones', requiresAuth: true },
   { href: '/profile', icon: User, label: 'Perfil', requiresAuth: true },
 ];
