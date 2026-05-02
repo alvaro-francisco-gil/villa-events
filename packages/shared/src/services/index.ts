@@ -12,3 +12,4 @@ export * from './notificationService';
 export * from './imageService';
 export * from './censoService';
 export * from './membershipProfileService';
+export * from './feedService';
