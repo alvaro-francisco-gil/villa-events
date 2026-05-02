@@ -22,7 +22,7 @@ async function main() {
   const villagesSnap = await db.collection('villages').get();
   console.log(`[migrate] found ${villagesSnap.size} villages`);
 
-  let orgCount = 0, orgMemberCount = 0, eventCount = 0, regCount = 0;
+  let orgCount = 0, orgMemberCount = 0, eventCount = 0, regCount = 0, errors = 0;
 
   for (const villageDoc of villagesSnap.docs) {
     const vid = villageDoc.id;
@@ -35,76 +35,91 @@ async function main() {
     // -- ORGANIZATIONS --
     const nestedOrgsSnap = await db.collection('villages').doc(vid).collection('organizations').get();
     for (const orgDoc of nestedOrgsSnap.docs) {
-      const oid = orgDoc.id;
-      const orgData = orgDoc.data();
-      const flatRef = db.collection('organizations').doc(oid);
-      const flatExists = (await flatRef.get()).exists;
+      try {
+        const oid = orgDoc.id;
+        const orgData = orgDoc.data();
+        const flatRef = db.collection('organizations').doc(oid);
+        const flatExists = (await flatRef.get()).exists;
 
-      if (!flatExists) {
-        const newDoc = {
-          ...orgData,
-          villageId: vid,
-          approvedBy: orgData.approvedBy ?? null,
-          decidedAt: orgData.decidedAt ?? null,
-        };
-        if (commit) await flatRef.set(newDoc);
-        console.log(`[org] ${vid}/${oid} -> organizations/${oid}`);
-        orgCount++;
-      } else {
-        console.log(`[org] ${vid}/${oid} already exists at top-level, skipping`);
-      }
-
-      // org members
-      const orgMembersSnap = await orgDoc.ref.collection('members').get();
-      for (const memberDoc of orgMembersSnap.docs) {
-        const flatMemberRef = flatRef.collection('members').doc(memberDoc.id);
-        const flatMemberExists = (await flatMemberRef.get()).exists;
-        if (!flatMemberExists) {
-          if (commit) await flatMemberRef.set(memberDoc.data());
-          console.log(`[org-member] ${vid}/${oid}/${memberDoc.id}`);
-          orgMemberCount++;
+        if (!flatExists) {
+          const newDoc = {
+            ...orgData,
+            villageId: vid,
+            approvedBy: orgData.approvedBy ?? null,
+            decidedAt: orgData.decidedAt ?? null,
+          };
+          if (commit) await flatRef.set(newDoc);
+          console.log(`[org] ${vid}/${oid} -> organizations/${oid}`);
+          orgCount++;
+        } else {
+          console.log(`[org] ${vid}/${oid} already exists at top-level, skipping`);
         }
+
+        // org members
+        const orgMembersSnap = await orgDoc.ref.collection('members').get();
+        for (const memberDoc of orgMembersSnap.docs) {
+          const flatMemberRef = flatRef.collection('members').doc(memberDoc.id);
+          const flatMemberExists = (await flatMemberRef.get()).exists;
+          if (!flatMemberExists) {
+            if (commit) await flatMemberRef.set(memberDoc.data());
+            console.log(`[org-member] ${vid}/${oid}/${memberDoc.id}`);
+            orgMemberCount++;
+          }
+        }
+      } catch (err) {
+        console.error(`[error] org ${vid}/${orgDoc.id}:`, err.message);
+        errors++;
       }
     }
 
     // -- EVENTS --
     const nestedEventsSnap = await db.collection('villages').doc(vid).collection('events').get();
     for (const eventDoc of nestedEventsSnap.docs) {
-      const eid = eventDoc.id;
-      const eventData = eventDoc.data();
-      const flatRef = db.collection('events').doc(eid);
-      const flatExists = (await flatRef.get()).exists;
+      try {
+        const eid = eventDoc.id;
+        const eventData = eventDoc.data();
+        const flatRef = db.collection('events').doc(eid);
+        const flatExists = (await flatRef.get()).exists;
 
-      if (!flatExists) {
-        const newDoc = {
-          ...eventData,
-          villageId: vid,
-          villageName,
-          villageCoverImage: villageCover,
-          villageCoordinates: villageCoords,
-        };
-        if (commit) await flatRef.set(newDoc);
-        console.log(`[event] ${vid}/${eid} -> events/${eid}`);
-        eventCount++;
-      } else {
-        console.log(`[event] ${vid}/${eid} already at top-level, skipping`);
-      }
-
-      // registrations
-      const regsSnap = await eventDoc.ref.collection('registrations').get();
-      for (const regDoc of regsSnap.docs) {
-        const flatRegRef = flatRef.collection('registrations').doc(regDoc.id);
-        const flatRegExists = (await flatRegRef.get()).exists;
-        if (!flatRegExists) {
-          if (commit) await flatRegRef.set(regDoc.data());
-          console.log(`[reg] ${vid}/${eid}/${regDoc.id}`);
-          regCount++;
+        if (!flatExists) {
+          const newDoc = {
+            ...eventData,
+            villageId: vid,
+            villageName,
+            villageCoverImage: villageCover,
+            villageCoordinates: villageCoords,
+          };
+          if (commit) await flatRef.set(newDoc);
+          console.log(`[event] ${vid}/${eid} -> events/${eid}`);
+          eventCount++;
+        } else {
+          console.log(`[event] ${vid}/${eid} already at top-level, skipping`);
         }
+
+        // registrations
+        const regsSnap = await eventDoc.ref.collection('registrations').get();
+        for (const regDoc of regsSnap.docs) {
+          const flatRegRef = flatRef.collection('registrations').doc(regDoc.id);
+          const flatRegExists = (await flatRegRef.get()).exists;
+          if (!flatRegExists) {
+            if (commit) await flatRegRef.set(regDoc.data());
+            console.log(`[reg] ${vid}/${eid}/${regDoc.id}`);
+            regCount++;
+          }
+        }
+      } catch (err) {
+        console.error(`[error] event ${vid}/${eventDoc.id}:`, err.message);
+        errors++;
       }
     }
   }
 
-  console.log(`[migrate] DONE — orgs=${orgCount} orgMembers=${orgMemberCount} events=${eventCount} regs=${regCount} (commit=${commit})`);
+  console.log(`[migrate] DONE — orgs=${orgCount} orgMembers=${orgMemberCount} events=${eventCount} regs=${regCount} errors=${errors} (commit=${commit})`);
+
+  if (errors > 0) {
+    console.error(`[migrate] ${errors} document(s) failed. Re-run to retry (script is idempotent).`);
+    process.exit(1);
+  }
 
   if (!commit) {
     console.log(`[migrate] Dry run. Re-run with --commit to write.`);
