@@ -11,6 +11,7 @@ service cloud.firestore {
     }
     function isVillageAdmin(villageId) {
       return isAuthenticated() &&
+        exists(/databases/$(database)/documents/villages/$(villageId)/members/$(request.auth.uid)) &&
         get(/databases/$(database)/documents/villages/$(villageId)/members/$(request.auth.uid)).data.role == 'admin';
     }
     function isVillageMember(villageId) {
@@ -68,7 +69,7 @@ service cloud.firestore {
       match /inviteTokens/{tokenId} {
         allow read: if true;
         allow create: if isVillageAdmin(villageId) || isAppAdmin();
-        allow update: if isAuthenticated();
+        allow update: if false;
         allow delete: if isVillageAdmin(villageId) || isAppAdmin();
       }
     }
