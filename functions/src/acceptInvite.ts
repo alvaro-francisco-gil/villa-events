@@ -1,5 +1,6 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 
 const db = admin.firestore();
 
@@ -88,6 +89,28 @@ export const acceptInvite = onCall<AcceptInviteData, Promise<AcceptInviteResult>
           activeVillageId: villageId,
           createdAt: admin.firestore.FieldValue.serverTimestamp(),
         });
+        const personRef = db.collection('persons').doc()
+        await personRef.set({
+          givenName: (profile.displayName as string).split(' ')[0],
+          middleNames: [],
+          firstSurname: null,
+          secondSurname: null,
+          nickname: null,
+          sex: null,
+          birthday: null,
+          deathDate: null,
+          birthPlace: null,
+          burialPlace: null,
+          municipalityLinks: [],
+          occupationIds: [],
+          pendingOccupations: [],
+          biography: null,
+          photoURL: profile.photoURL ?? null,
+          userId: userId,
+          createdBy: userId,
+          createdAt: FieldValue.serverTimestamp(),
+        })
+        await db.collection('users').doc(userId).update({ personId: personRef.id })
         profileCreated = true;
       } else {
         // Existing user: just point them at this village.
