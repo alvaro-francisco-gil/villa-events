@@ -110,7 +110,8 @@ export async function updatePerson(
   personId: string,
   data: Partial<Omit<PersonData, 'createdBy' | 'createdAt'>>
 ): Promise<void> {
-  await updateDoc(doc(personsCol(), personId), data as Record<string, unknown>)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await updateDoc(doc(personsCol(), personId), data as any)
 }
 
 export async function deletePerson(personId: string): Promise<void> {
