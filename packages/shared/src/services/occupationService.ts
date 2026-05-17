@@ -1,5 +1,5 @@
 import {
-  collection, doc, getDocs, addDoc, updateDoc,
+  collection, doc, getDocs, addDoc, updateDoc, deleteDoc,
   query, where, orderBy, serverTimestamp, Timestamp,
 } from 'firebase/firestore'
 import { db } from '../firebase'
@@ -70,4 +70,12 @@ export async function reviewProposal(
     reviewedBy,
     reviewedAt: serverTimestamp(),
   })
+}
+
+export async function updateOccupation(id: string, data: Partial<Omit<OccupationData, 'createdAt'>>): Promise<void> {
+  await updateDoc(doc(occupationsCol(), id), data as any)
+}
+
+export async function deleteOccupation(id: string): Promise<void> {
+  await deleteDoc(doc(occupationsCol(), id))
 }

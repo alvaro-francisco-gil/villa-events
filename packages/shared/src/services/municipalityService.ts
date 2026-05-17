@@ -1,5 +1,5 @@
 import {
-  collection, doc, getDoc, getDocs, addDoc, query, orderBy, serverTimestamp, Timestamp,
+  collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, orderBy, serverTimestamp, Timestamp,
 } from 'firebase/firestore'
 import { db } from '../firebase'
 import type { MunicipalityData, MunicipalityDataInput, BarrioData, BarrioDataInput, CemeteryData, CemeteryDataInput } from '../models/municipality'
@@ -95,4 +95,28 @@ export async function createCemetery(municipalityId: string, input: CemeteryData
     createdAt: serverTimestamp(),
   })
   return ref.id
+}
+
+export async function updateMunicipality(id: string, data: Partial<Omit<MunicipalityData, 'createdAt'>>): Promise<void> {
+  await updateDoc(doc(municipalitiesCol(), id), data as any)
+}
+
+export async function deleteMunicipality(id: string): Promise<void> {
+  await deleteDoc(doc(municipalitiesCol(), id))
+}
+
+export async function updateBarrio(municipalityId: string, barrioId: string, data: Partial<Omit<BarrioData, 'createdAt'>>): Promise<void> {
+  await updateDoc(doc(barriosCol(municipalityId), barrioId), data as any)
+}
+
+export async function deleteBarrio(municipalityId: string, barrioId: string): Promise<void> {
+  await deleteDoc(doc(barriosCol(municipalityId), barrioId))
+}
+
+export async function updateCemetery(municipalityId: string, cemeteryId: string, data: Partial<Omit<CemeteryData, 'createdAt'>>): Promise<void> {
+  await updateDoc(doc(cemeteriesCol(municipalityId), cemeteryId), data as any)
+}
+
+export async function deleteCemetery(municipalityId: string, cemeteryId: string): Promise<void> {
+  await deleteDoc(doc(cemeteriesCol(municipalityId), cemeteryId))
 }

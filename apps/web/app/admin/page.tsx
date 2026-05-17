@@ -9,7 +9,7 @@ import { getVillages } from '@cultuvilla/shared/services/villageService';
 import type { VillageData } from '@cultuvilla/shared/models/village';
 import { TopBar } from '@/components/common/TopBar';
 import { VillageForm } from '@/components/admin/VillageForm';
-import { Pencil, Settings, Plus } from 'lucide-react';
+import { Pencil, Settings, Plus, MapPin, Briefcase } from 'lucide-react';
 
 type Status = 'checking' | 'allowed';
 type FormMode = { kind: 'closed' } | { kind: 'create' } | { kind: 'edit'; village: VillageData & { id: string } };
@@ -54,6 +54,34 @@ export default function AdminPage() {
     <>
       <TopBar title="Administración" />
       <div className="p-4 space-y-6">
+
+        {/* Navigation hub */}
+        <section className="space-y-3">
+          <h2 className="font-semibold">Datos de referencia</h2>
+          <div className="grid grid-cols-2 gap-3">
+            <Link
+              href="/admin/municipalities"
+              className="bg-white border border-gray-200 rounded-xl p-4 flex flex-col items-center gap-2 hover:bg-blue-50 hover:border-blue-200 transition"
+            >
+              <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600">
+                <MapPin size={20} />
+              </div>
+              <span className="text-sm font-medium text-gray-700 text-center">Municipios</span>
+              <span className="text-xs text-gray-400 text-center">Barrios y cementerios</span>
+            </Link>
+            <Link
+              href="/admin/occupations"
+              className="bg-white border border-gray-200 rounded-xl p-4 flex flex-col items-center gap-2 hover:bg-blue-50 hover:border-blue-200 transition"
+            >
+              <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600">
+                <Briefcase size={20} />
+              </div>
+              <span className="text-sm font-medium text-gray-700 text-center">Ocupaciones</span>
+              <span className="text-xs text-gray-400 text-center">Aprobadas y propuestas</span>
+            </Link>
+          </div>
+        </section>
+
         <section className="space-y-3">
           <div className="flex items-center justify-between">
             <h2 className="font-semibold">Pueblos</h2>
