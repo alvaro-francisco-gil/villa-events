@@ -12,9 +12,11 @@
     "shared:build": "pnpm --filter @cultuvilla/shared build",
     "shared:test": "pnpm --filter @cultuvilla/shared test",
     "build": "pnpm -r build",
-    "test": "pnpm -r test"
+    "test": "pnpm -r test",
+    "seed:municipalities": "node scripts/seed-municipalities.mjs"
   },
   "devDependencies": {
+    "firebase-admin": "^13.0.0",
     "typescript": "~5.8.3"
   }
 }
