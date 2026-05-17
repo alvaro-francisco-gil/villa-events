@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from './useAuth';
-import { isAppAdmin } from '@villa-events/shared/services/adminService';
+import { isAppAdmin } from '@cultuvilla/shared/services/adminService';
 
 export function useIsAppAdmin(): { isAppAdmin: boolean; loading: boolean } {
   const { user, loading: authLoading } = useAuth();

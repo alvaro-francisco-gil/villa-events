@@ -3,11 +3,11 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { getOrganization } from '@villa-events/shared/services/organizationService';
-import { getEventsByOrganization } from '@villa-events/shared/services/eventService';
-import { isOrgMember } from '@villa-events/shared/services/orgMemberService';
-import type { OrganizationData } from '@villa-events/shared/models/organization';
-import type { EventData } from '@villa-events/shared/models/event';
+import { getOrganization } from '@cultuvilla/shared/services/organizationService';
+import { getEventsByOrganization } from '@cultuvilla/shared/services/eventService';
+import { isOrgMember } from '@cultuvilla/shared/services/orgMemberService';
+import type { OrganizationData } from '@cultuvilla/shared/models/organization';
+import type { EventData } from '@cultuvilla/shared/models/event';
 import { useAuth } from '@/hooks/useAuth';
 import { SkeletonLoader } from '@/components/common/SkeletonLoader';
 import { ArrowLeft, Plus, Calendar, MapPin } from 'lucide-react';

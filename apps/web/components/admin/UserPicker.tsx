@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { getAllUsers } from '@villa-events/shared/services/userService';
-import type { UserData } from '@villa-events/shared/models/user';
+import { getAllUsers } from '@cultuvilla/shared/services/userService';
+import type { UserData } from '@cultuvilla/shared/models/user';
 
 type UserItem = UserData & { id: string };
 

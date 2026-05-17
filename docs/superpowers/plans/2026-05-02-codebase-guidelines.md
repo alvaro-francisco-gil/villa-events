@@ -109,7 +109,7 @@ describe('eventConverter.fromFirestore', () => {
 - [ ] **Step 2: Run test to confirm it fails**
 
 ```bash
-cd /home/powervaro/githubs/villa-events && pnpm shared:test
+cd /home/powervaro/githubs/cultuvilla && pnpm shared:test
 ```
 
 Expected: FAIL — `eventConverter` is not exported from EventDataModel.
@@ -1906,16 +1906,16 @@ git commit -m "feat(shared): add Firestore converters to notification/registrati
 
 - [ ] **Step 1: Create CLAUDE.md at the repo root**
 
-Create `/home/powervaro/githubs/villa-events/CLAUDE.md` with this content:
+Create `/home/powervaro/githubs/cultuvilla/CLAUDE.md` with this content:
 
 ```markdown
-# Villa Events — Claude Notes
+# Cultuvilla — Claude Notes
 
 Community events platform for Spanish villages. pnpm monorepo, Next.js 15 web app, Firebase backend.
 
 ## Layout
 - `apps/web/` — Next.js 15 + React 19 + Tailwind 4 + next-intl. TypeScript.
-- `packages/shared/` — `@villa-events/shared`: models, services, firebase. **TypeScript, vitest.**
+- `packages/shared/` — `@cultuvilla/shared`: models, services, firebase. **TypeScript, vitest.**
 - `functions/` — Firebase Cloud Functions (Node, TypeScript).
 - `docs/superpowers/specs/` — design docs, named `YYYY-MM-DD-<slug>.md`.
 - `docs/superpowers/plans/` — implementation plans for in-flight work.
@@ -1982,9 +1982,9 @@ git commit -m "docs: add CLAUDE.md with agent-first codebase guidelines"
 - [ ] **Step 1: Install ESLint dependencies**
 
 ```bash
-cd /home/powervaro/githubs/villa-events && pnpm add -D -w husky lint-staged
-pnpm add -D --filter villa-events-web @typescript-eslint/parser @typescript-eslint/eslint-plugin unused-imports eslint-plugin-unused-imports
-pnpm add -D --filter @villa-events/shared eslint @typescript-eslint/parser @typescript-eslint/eslint-plugin eslint-plugin-unused-imports
+cd /home/powervaro/githubs/cultuvilla && pnpm add -D -w husky lint-staged
+pnpm add -D --filter cultuvilla-web @typescript-eslint/parser @typescript-eslint/eslint-plugin unused-imports eslint-plugin-unused-imports
+pnpm add -D --filter @cultuvilla/shared eslint @typescript-eslint/parser @typescript-eslint/eslint-plugin eslint-plugin-unused-imports
 ```
 
 - [ ] **Step 2: Create apps/web/eslint.config.mjs**
@@ -2080,15 +2080,15 @@ In the root `package.json`, add to `scripts`:
 Add a top-level `lint-staged` key:
 ```json
 "lint-staged": {
-  "apps/web/**/*.{ts,tsx}": "pnpm --filter villa-events-web exec eslint --fix --no-warn-ignored --max-warnings 0",
-  "packages/shared/src/**/*.ts": "pnpm --filter @villa-events/shared exec eslint --fix --no-warn-ignored --max-warnings 0"
+  "apps/web/**/*.{ts,tsx}": "pnpm --filter cultuvilla-web exec eslint --fix --no-warn-ignored --max-warnings 0",
+  "packages/shared/src/**/*.ts": "pnpm --filter @cultuvilla/shared exec eslint --fix --no-warn-ignored --max-warnings 0"
 }
 ```
 
 - [ ] **Step 6: Initialize husky and create pre-commit hook**
 
 ```bash
-cd /home/powervaro/githubs/villa-events && pnpm exec husky init
+cd /home/powervaro/githubs/cultuvilla && pnpm exec husky init
 ```
 
 Replace the generated `.husky/pre-commit` content with:
@@ -2099,8 +2099,8 @@ pnpm exec lint-staged
 - [ ] **Step 7: Verify lint runs cleanly**
 
 ```bash
-pnpm --filter villa-events-web exec eslint apps/web --max-warnings 0
-pnpm --filter @villa-events/shared exec eslint packages/shared/src --max-warnings 0
+pnpm --filter cultuvilla-web exec eslint apps/web --max-warnings 0
+pnpm --filter @cultuvilla/shared exec eslint packages/shared/src --max-warnings 0
 ```
 
 Fix any warnings that appear. Common expected ones after adding converters:

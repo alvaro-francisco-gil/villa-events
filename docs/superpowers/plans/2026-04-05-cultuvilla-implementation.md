@@ -1,14 +1,14 @@
-# Villa Events Implementation Plan
+# Cultuvilla Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Build a mobile-first village community event platform with public browsing, village-scoped organizations, event sign-ups with waitlist, and persona management.
 
-**Architecture:** pnpm monorepo following ordago-apps patterns — shared package (`@villa-events/shared`) with domain models (interfaces + builders), stateless services, and pure utils. Next.js 15 web app with feature-based components, custom hooks, and React contexts. Firebase backend (Auth, Firestore, Storage, Cloud Functions). Designed for future React Native app reuse.
+**Architecture:** pnpm monorepo following ordago-apps patterns — shared package (`@cultuvilla/shared`) with domain models (interfaces + builders), stateless services, and pure utils. Next.js 15 web app with feature-based components, custom hooks, and React contexts. Firebase backend (Auth, Firestore, Storage, Cloud Functions). Designed for future React Native app reuse.
 
 **Tech Stack:** TypeScript, Next.js 15, React 19, Tailwind CSS 4, Firebase 11, next-intl, Vitest, pnpm workspaces
 
-**Spec:** `docs/superpowers/specs/2026-04-05-villa-events-design.md`
+**Spec:** `docs/superpowers/specs/2026-04-05-cultuvilla-design.md`
 
 ---
 
@@ -184,7 +184,7 @@ functions/
 
 ```json
 {
-  "name": "@villa-events/shared",
+  "name": "@cultuvilla/shared",
   "version": "0.1.0",
   "type": "module",
   "main": "dist/index.js",
@@ -232,7 +232,7 @@ export * from './utils';
 
 - [ ] **Step 4: Run build to verify setup**
 
-Run: `cd /home/powervaro/githubs/villa-events && pnpm --filter @villa-events/shared build`
+Run: `cd /home/powervaro/githubs/cultuvilla && pnpm --filter @cultuvilla/shared build`
 Expected: Build succeeds (may have warnings about missing exports, that's fine for now)
 
 - [ ] **Step 5: Commit**
@@ -350,7 +350,7 @@ describe('buildUserData', () => {
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `cd /home/powervaro/githubs/villa-events && pnpm --filter @villa-events/shared test -- test/models/UserDataModel.test.ts`
+Run: `cd /home/powervaro/githubs/cultuvilla && pnpm --filter @cultuvilla/shared test -- test/models/UserDataModel.test.ts`
 Expected: FAIL — cannot resolve module
 
 - [ ] **Step 3: Implement UserDataModel**
@@ -436,7 +436,7 @@ export * from './PersonaDataModel';
 
 - [ ] **Step 6: Run test to verify it passes**
 
-Run: `cd /home/powervaro/githubs/villa-events && pnpm --filter @villa-events/shared test -- test/models/UserDataModel.test.ts`
+Run: `cd /home/powervaro/githubs/cultuvilla && pnpm --filter @cultuvilla/shared test -- test/models/UserDataModel.test.ts`
 Expected: PASS
 
 - [ ] **Step 7: Commit**
@@ -718,7 +718,7 @@ describe('buildEventData', () => {
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `cd /home/powervaro/githubs/villa-events && pnpm --filter @villa-events/shared test -- test/models/EventDataModel.test.ts`
+Run: `cd /home/powervaro/githubs/cultuvilla && pnpm --filter @cultuvilla/shared test -- test/models/EventDataModel.test.ts`
 Expected: FAIL
 
 - [ ] **Step 3: Implement EventDataModel**
@@ -839,7 +839,7 @@ describe('buildRegistrationData', () => {
 
 - [ ] **Step 5: Run test to verify it fails**
 
-Run: `cd /home/powervaro/githubs/villa-events && pnpm --filter @villa-events/shared test -- test/models/RegistrationDataModel.test.ts`
+Run: `cd /home/powervaro/githubs/cultuvilla && pnpm --filter @cultuvilla/shared test -- test/models/RegistrationDataModel.test.ts`
 Expected: FAIL
 
 - [ ] **Step 6: Implement RegistrationDataModel**
@@ -890,7 +890,7 @@ export * from './RegistrationDataModel';
 
 - [ ] **Step 8: Run all tests to verify they pass**
 
-Run: `cd /home/powervaro/githubs/villa-events && pnpm --filter @villa-events/shared test`
+Run: `cd /home/powervaro/githubs/cultuvilla && pnpm --filter @cultuvilla/shared test`
 Expected: All tests PASS
 
 - [ ] **Step 9: Commit**
@@ -977,7 +977,7 @@ export * from './notification';
 
 - [ ] **Step 4: Run build to verify all exports resolve**
 
-Run: `cd /home/powervaro/githubs/villa-events && pnpm --filter @villa-events/shared build`
+Run: `cd /home/powervaro/githubs/cultuvilla && pnpm --filter @cultuvilla/shared build`
 Expected: Build succeeds
 
 - [ ] **Step 5: Commit**
@@ -1904,7 +1904,7 @@ describe('determineRegistrationStatus', () => {
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `cd /home/powervaro/githubs/villa-events && pnpm --filter @villa-events/shared test -- test/services/registrationService.test.ts`
+Run: `cd /home/powervaro/githubs/cultuvilla && pnpm --filter @cultuvilla/shared test -- test/services/registrationService.test.ts`
 Expected: FAIL
 
 - [ ] **Step 3: Implement registrationService**
@@ -2081,7 +2081,7 @@ export async function getUserRegistrationsAcrossVillages(
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `cd /home/powervaro/githubs/villa-events && pnpm --filter @villa-events/shared test -- test/services/registrationService.test.ts`
+Run: `cd /home/powervaro/githubs/cultuvilla && pnpm --filter @cultuvilla/shared test -- test/services/registrationService.test.ts`
 Expected: PASS
 
 - [ ] **Step 5: Commit**
@@ -2229,7 +2229,7 @@ Replace `packages/shared/src/utils/index.ts`:
 
 - [ ] **Step 4: Run full test suite and build**
 
-Run: `cd /home/powervaro/githubs/villa-events && pnpm --filter @villa-events/shared test && pnpm --filter @villa-events/shared build`
+Run: `cd /home/powervaro/githubs/cultuvilla && pnpm --filter @cultuvilla/shared test && pnpm --filter @cultuvilla/shared build`
 Expected: All tests pass, build succeeds
 
 - [ ] **Step 5: Commit**
@@ -2459,7 +2459,7 @@ git commit -m "feat: update storage rules for village-scoped paths and user phot
 
 - [ ] **Step 1: Install next-intl**
 
-Run: `cd /home/powervaro/githubs/villa-events && pnpm --filter villa-events-web add next-intl`
+Run: `cd /home/powervaro/githubs/cultuvilla && pnpm --filter cultuvilla-web add next-intl`
 
 - [ ] **Step 2: Create i18n config**
 
@@ -2652,7 +2652,7 @@ import {
   GoogleAuthProvider,
   type User,
 } from 'firebase/auth';
-import { auth } from '@villa-events/shared/firebase';
+import { auth } from '@cultuvilla/shared/firebase';
 
 interface AuthState {
   user: User | null;
@@ -2741,11 +2741,11 @@ Create `apps/web/contexts/VillageContext.tsx`:
 'use client';
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-import { getVillage } from '@villa-events/shared/services/villageService';
-import { getVillageMember } from '@villa-events/shared/services/villageMemberService';
+import { getVillage } from '@cultuvilla/shared/services/villageService';
+import { getVillageMember } from '@cultuvilla/shared/services/villageMemberService';
 import { useAuth } from './AuthContext';
-import type { VillageData } from '@villa-events/shared/models/village';
-import type { VillageMemberData } from '@villa-events/shared/models/village';
+import type { VillageData } from '@cultuvilla/shared/models/village';
+import type { VillageMemberData } from '@cultuvilla/shared/models/village';
 
 interface VillageContextValue {
   village: (VillageData & { id: string }) | null;
@@ -2846,7 +2846,7 @@ import { usePathname } from 'next/navigation';
 import { Home, CalendarCheck, Bell, User } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useEffect, useState } from 'react';
-import { getUnreadCount } from '@villa-events/shared/services/notificationService';
+import { getUnreadCount } from '@cultuvilla/shared/services/notificationService';
 
 interface NavItem {
   href: string;
@@ -2990,7 +2990,7 @@ import { BottomNav } from '@/components/common/BottomNav';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Villa Events',
+  title: 'Cultuvilla',
   description: 'Eventos de tu pueblo',
 };
 
@@ -3045,7 +3045,7 @@ Create `apps/web/components/village/VillageCard.tsx`:
 
 ```typescript
 import Link from 'next/link';
-import type { VillageData } from '@villa-events/shared/models/village';
+import type { VillageData } from '@cultuvilla/shared/models/village';
 
 interface VillageCardProps {
   village: VillageData & { id: string };
@@ -3086,11 +3086,11 @@ Replace `apps/web/app/page.tsx`:
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getVillages } from '@villa-events/shared/services/villageService';
+import { getVillages } from '@cultuvilla/shared/services/villageService';
 import { TopBar } from '@/components/common/TopBar';
 import { VillageCard } from '@/components/village/VillageCard';
 import { EventCardSkeleton } from '@/components/common/SkeletonLoader';
-import type { VillageData } from '@villa-events/shared/models/village';
+import type { VillageData } from '@cultuvilla/shared/models/village';
 
 export default function HomePage() {
   const [villages, setVillages] = useState<(VillageData & { id: string })[]>([]);
@@ -3105,7 +3105,7 @@ export default function HomePage() {
 
   return (
     <>
-      <TopBar title="Villa Events" />
+      <TopBar title="Cultuvilla" />
       <div className="p-4 space-y-4">
         <h1 className="text-xl font-bold">Pueblos</h1>
         {loading ? (
@@ -3173,7 +3173,7 @@ Create `apps/web/components/event/EventCard.tsx`:
 ```typescript
 import Link from 'next/link';
 import { Calendar, MapPin, Users } from 'lucide-react';
-import type { EventData } from '@villa-events/shared/models/event';
+import type { EventData } from '@cultuvilla/shared/models/event';
 
 interface EventCardProps {
   event: EventData & { id: string };
@@ -3258,11 +3258,11 @@ Create `apps/web/app/village/[id]/page.tsx`:
 
 import { useEffect, useState } from 'react';
 import { useVillage } from '@/hooks/useVillage';
-import { getEvents } from '@villa-events/shared/services/eventService';
+import { getEvents } from '@cultuvilla/shared/services/eventService';
 import { TopBar } from '@/components/common/TopBar';
 import { EventCard } from '@/components/event/EventCard';
 import { EventCardSkeleton } from '@/components/common/SkeletonLoader';
-import type { EventData } from '@villa-events/shared/models/event';
+import type { EventData } from '@cultuvilla/shared/models/event';
 
 export default function VillageHomePage() {
   const { village, loading: villageLoading } = useVillage();
@@ -3292,7 +3292,7 @@ export default function VillageHomePage() {
   if (!village) {
     return (
       <>
-        <TopBar title="Villa Events" />
+        <TopBar title="Cultuvilla" />
         <div className="p-4">
           <p className="text-gray-500">Pueblo no encontrado</p>
         </div>
@@ -3351,9 +3351,9 @@ Create `apps/web/hooks/usePersonas.ts`:
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getPersonas } from '@villa-events/shared/services/personaService';
+import { getPersonas } from '@cultuvilla/shared/services/personaService';
 import { useAuth } from './useAuth';
-import type { PersonaData } from '@villa-events/shared/models/user';
+import type { PersonaData } from '@cultuvilla/shared/models/user';
 
 export function usePersonas() {
   const { user } = useAuth();
@@ -3390,9 +3390,9 @@ import {
   getEventRegistrations,
   getUserRegistrations,
   getConfirmedCount,
-} from '@villa-events/shared/services/registrationService';
+} from '@cultuvilla/shared/services/registrationService';
 import { useAuth } from './useAuth';
-import type { RegistrationData } from '@villa-events/shared/models/event';
+import type { RegistrationData } from '@cultuvilla/shared/models/event';
 
 export function useRegistrations(villageId: string, eventId: string) {
   const { user } = useAuth();
@@ -3435,8 +3435,8 @@ Create `apps/web/components/event/SignUpModal.tsx`:
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { usePersonas } from '@/hooks/usePersonas';
-import { registerToEvent, type RegisterInput } from '@villa-events/shared/services/registrationService';
-import { getUserProfile } from '@villa-events/shared/services/userService';
+import { registerToEvent, type RegisterInput } from '@cultuvilla/shared/services/registrationService';
+import { getUserProfile } from '@cultuvilla/shared/services/userService';
 
 interface SignUpModalProps {
   villageId: string;
@@ -3584,7 +3584,7 @@ export function SignUpModal({
 Create `apps/web/components/event/AttendeeList.tsx`:
 
 ```typescript
-import type { RegistrationData } from '@villa-events/shared/models/event';
+import type { RegistrationData } from '@cultuvilla/shared/models/event';
 
 interface AttendeeListProps {
   registrations: (RegistrationData & { id: string })[];
@@ -3653,15 +3653,15 @@ import { use, useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useVillage } from '@/hooks/useVillage';
 import { useRegistrations } from '@/hooks/useRegistrations';
-import { getEvent } from '@villa-events/shared/services/eventService';
-import { cancelRegistration } from '@villa-events/shared/services/registrationService';
+import { getEvent } from '@cultuvilla/shared/services/eventService';
+import { cancelRegistration } from '@cultuvilla/shared/services/registrationService';
 import { TopBar } from '@/components/common/TopBar';
 import { SignUpModal } from '@/components/event/SignUpModal';
 import { AttendeeList } from '@/components/event/AttendeeList';
 import { EventCardSkeleton } from '@/components/common/SkeletonLoader';
 import { Calendar, MapPin, Users, Phone, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
-import type { EventData } from '@villa-events/shared/models/event';
+import type { EventData } from '@cultuvilla/shared/models/event';
 
 export default function EventDetailPage({
   params,
@@ -3695,7 +3695,7 @@ export default function EventDetailPage({
   if (!event) {
     return (
       <>
-        <TopBar title="Villa Events" />
+        <TopBar title="Cultuvilla" />
         <div className="p-4"><p className="text-gray-500">Evento no encontrado</p></div>
       </>
     );
@@ -3858,7 +3858,7 @@ Replace `apps/web/app/login/page.tsx`:
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
-import { createUserProfile } from '@villa-events/shared/services/userService';
+import { createUserProfile } from '@cultuvilla/shared/services/userService';
 import { TopBar } from '@/components/common/TopBar';
 
 export default function LoginPage() {
@@ -3917,7 +3917,7 @@ export default function LoginPage() {
 
   return (
     <>
-      <TopBar title="Villa Events" />
+      <TopBar title="Cultuvilla" />
       <div className="p-6 space-y-6">
         <h1 className="text-2xl font-bold text-center">
           {isSignUp ? 'Crear cuenta' : 'Iniciar sesión'}
@@ -4028,11 +4028,11 @@ Create `apps/web/app/invite/[token]/page.tsx`:
 import { use, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
-import { validateInviteToken, consumeInviteToken } from '@villa-events/shared/services/inviteTokenService';
-import { addVillageMember } from '@villa-events/shared/services/villageMemberService';
-import { getVillage } from '@villa-events/shared/services/villageService';
+import { validateInviteToken, consumeInviteToken } from '@cultuvilla/shared/services/inviteTokenService';
+import { addVillageMember } from '@cultuvilla/shared/services/villageMemberService';
+import { getVillage } from '@cultuvilla/shared/services/villageService';
 import { TopBar } from '@/components/common/TopBar';
-import type { VillageData } from '@villa-events/shared/models/village';
+import type { VillageData } from '@cultuvilla/shared/models/village';
 
 export default function InvitePage({
   params,
@@ -4084,7 +4084,7 @@ export default function InvitePage({
 
   return (
     <>
-      <TopBar title="Villa Events" />
+      <TopBar title="Cultuvilla" />
       <div className="p-6 text-center space-y-4">
         {status === 'loading' && <p className="text-gray-500">Verificando invitación...</p>}
         {status === 'invalid' && <p className="text-red-600">Invitación no válida o expirada</p>}
@@ -4139,7 +4139,7 @@ Create `apps/web/components/profile/PersonaCard.tsx`:
 
 ```typescript
 import { Pencil, Trash2 } from 'lucide-react';
-import type { PersonaData } from '@villa-events/shared/models/user';
+import type { PersonaData } from '@cultuvilla/shared/models/user';
 
 interface PersonaCardProps {
   persona: PersonaData & { id: string };
@@ -4185,7 +4185,7 @@ Create `apps/web/components/profile/PersonaForm.tsx`:
 'use client';
 
 import { useState } from 'react';
-import type { PersonaData } from '@villa-events/shared/models/user';
+import type { PersonaData } from '@cultuvilla/shared/models/user';
 
 interface PersonaFormProps {
   initialData?: PersonaData;
@@ -4259,10 +4259,10 @@ Replace `apps/web/app/profile/page.tsx`:
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
-import { getUserProfile, updateUserProfile } from '@villa-events/shared/services/userService';
+import { getUserProfile, updateUserProfile } from '@cultuvilla/shared/services/userService';
 import { TopBar } from '@/components/common/TopBar';
 import Link from 'next/link';
-import type { UserData } from '@villa-events/shared/models/user';
+import type { UserData } from '@cultuvilla/shared/models/user';
 
 export default function ProfilePage() {
   const { user, signOut, loading: authLoading } = useAuth();
@@ -4386,13 +4386,13 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { usePersonas } from '@/hooks/usePersonas';
-import { createPersona, updatePersona, deletePersona } from '@villa-events/shared/services/personaService';
+import { createPersona, updatePersona, deletePersona } from '@cultuvilla/shared/services/personaService';
 import { TopBar } from '@/components/common/TopBar';
 import { PersonaCard } from '@/components/profile/PersonaCard';
 import { PersonaForm } from '@/components/profile/PersonaForm';
 import { ArrowLeft, Plus } from 'lucide-react';
 import Link from 'next/link';
-import type { PersonaData } from '@villa-events/shared/models/user';
+import type { PersonaData } from '@cultuvilla/shared/models/user';
 
 export default function PersonasPage() {
   const { user } = useAuth();
@@ -4495,9 +4495,9 @@ Create `apps/web/hooks/useNotifications.ts`:
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getNotifications, getUnreadCount } from '@villa-events/shared/services/notificationService';
+import { getNotifications, getUnreadCount } from '@cultuvilla/shared/services/notificationService';
 import { useAuth } from './useAuth';
-import type { NotificationData } from '@villa-events/shared/models/notification';
+import type { NotificationData } from '@cultuvilla/shared/models/notification';
 
 export function useNotifications() {
   const { user } = useAuth();
@@ -4529,7 +4529,7 @@ export function useNotifications() {
 Create `apps/web/components/notification/NotificationItem.tsx`:
 
 ```typescript
-import type { NotificationData } from '@villa-events/shared/models/notification';
+import type { NotificationData } from '@cultuvilla/shared/models/notification';
 
 interface NotificationItemProps {
   notification: NotificationData & { id: string };
@@ -4568,7 +4568,7 @@ Create `apps/web/app/notifications/page.tsx`:
 
 import { useAuth } from '@/hooks/useAuth';
 import { useNotifications } from '@/hooks/useNotifications';
-import { markAsRead, markAllAsRead } from '@villa-events/shared/services/notificationService';
+import { markAsRead, markAllAsRead } from '@cultuvilla/shared/services/notificationService';
 import { TopBar } from '@/components/common/TopBar';
 import { NotificationItem } from '@/components/notification/NotificationItem';
 
@@ -4643,10 +4643,10 @@ Create `apps/web/app/my-signups/page.tsx`:
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { getUserRegistrationsAcrossVillages } from '@villa-events/shared/services/registrationService';
+import { getUserRegistrationsAcrossVillages } from '@cultuvilla/shared/services/registrationService';
 import { TopBar } from '@/components/common/TopBar';
 import Link from 'next/link';
-import type { RegistrationData } from '@villa-events/shared/models/event';
+import type { RegistrationData } from '@cultuvilla/shared/models/event';
 
 type RegWithPath = RegistrationData & { id: string; eventPath: string };
 
@@ -4726,8 +4726,8 @@ Replace `apps/web/components/EventForm.tsx` with `apps/web/components/event/Even
 'use client';
 
 import { useState } from 'react';
-import type { EventData } from '@villa-events/shared/models/event';
-import type { LocationData } from '@villa-events/shared/models/core';
+import type { EventData } from '@cultuvilla/shared/models/event';
+import type { LocationData } from '@cultuvilla/shared/models/core';
 
 interface EventFormProps {
   initialData?: EventData;
@@ -4880,16 +4880,16 @@ Create `apps/web/app/village/[id]/org/[orgId]/page.tsx`:
 
 import { use, useEffect, useState } from 'react';
 import { useVillage } from '@/hooks/useVillage';
-import { getOrganization } from '@villa-events/shared/services/organizationService';
-import { getOrgEvents } from '@villa-events/shared/services/eventService';
-import { isOrgMember } from '@villa-events/shared/services/orgMemberService';
+import { getOrganization } from '@cultuvilla/shared/services/organizationService';
+import { getOrgEvents } from '@cultuvilla/shared/services/eventService';
+import { isOrgMember } from '@cultuvilla/shared/services/orgMemberService';
 import { useAuth } from '@/hooks/useAuth';
 import { TopBar } from '@/components/common/TopBar';
 import { EventCard } from '@/components/event/EventCard';
 import Link from 'next/link';
 import { ArrowLeft, Plus } from 'lucide-react';
-import type { OrganizationData } from '@villa-events/shared/models/organization';
-import type { EventData } from '@villa-events/shared/models/event';
+import type { OrganizationData } from '@cultuvilla/shared/models/organization';
+import type { EventData } from '@cultuvilla/shared/models/event';
 
 export default function OrgPage({
   params,
@@ -4972,8 +4972,8 @@ import { use } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { useVillage } from '@/hooks/useVillage';
-import { createEvent } from '@villa-events/shared/services/eventService';
-import { getOrganization } from '@villa-events/shared/services/organizationService';
+import { createEvent } from '@cultuvilla/shared/services/eventService';
+import { getOrganization } from '@cultuvilla/shared/services/organizationService';
 import { TopBar } from '@/components/common/TopBar';
 import { EventForm } from '@/components/event/EventForm';
 import { ArrowLeft } from 'lucide-react';
@@ -5034,12 +5034,12 @@ Create `apps/web/app/village/[id]/org/[orgId]/events/[eventId]/edit/page.tsx`:
 
 import { use, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { getEvent, updateEvent, updateEventStatus } from '@villa-events/shared/services/eventService';
+import { getEvent, updateEvent, updateEventStatus } from '@cultuvilla/shared/services/eventService';
 import { TopBar } from '@/components/common/TopBar';
 import { EventForm } from '@/components/event/EventForm';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
-import type { EventData } from '@villa-events/shared/models/event';
+import type { EventData } from '@cultuvilla/shared/models/event';
 
 export default function EditEventPage({
   params,
@@ -5145,7 +5145,7 @@ Create `apps/web/components/organization/OrgCard.tsx`:
 
 ```typescript
 import Link from 'next/link';
-import type { OrganizationData } from '@villa-events/shared/models/organization';
+import type { OrganizationData } from '@cultuvilla/shared/models/organization';
 
 interface OrgCardProps {
   org: OrganizationData & { id: string };
@@ -5198,7 +5198,7 @@ Create `apps/web/components/organization/OrgRequestForm.tsx`:
 'use client';
 
 import { useState } from 'react';
-import type { OrganizationType } from '@villa-events/shared/models/organization';
+import type { OrganizationType } from '@cultuvilla/shared/models/organization';
 
 interface OrgRequestFormProps {
   onSubmit: (data: { name: string; description: string | null; type: OrganizationType }) => Promise<void>;
@@ -5273,16 +5273,16 @@ Create `apps/web/app/village/[id]/admin/page.tsx`:
 import { useEffect, useState } from 'react';
 import { useVillage } from '@/hooks/useVillage';
 import { useAuth } from '@/hooks/useAuth';
-import { getOrganizations, approveOrganization, rejectOrganization } from '@villa-events/shared/services/organizationService';
-import { addOrgMember } from '@villa-events/shared/services/orgMemberService';
-import { createInviteToken, getInviteTokens, deleteInviteToken } from '@villa-events/shared/services/inviteTokenService';
-import { getVillageMembers } from '@villa-events/shared/services/villageMemberService';
+import { getOrganizations, approveOrganization, rejectOrganization } from '@cultuvilla/shared/services/organizationService';
+import { addOrgMember } from '@cultuvilla/shared/services/orgMemberService';
+import { createInviteToken, getInviteTokens, deleteInviteToken } from '@cultuvilla/shared/services/inviteTokenService';
+import { getVillageMembers } from '@cultuvilla/shared/services/villageMemberService';
 import { TopBar } from '@/components/common/TopBar';
 import { OrgCard } from '@/components/organization/OrgCard';
 import { ArrowLeft, Copy, Plus, Trash2 } from 'lucide-react';
 import Link from 'next/link';
-import type { OrganizationData } from '@villa-events/shared/models/organization';
-import type { InviteTokenData } from '@villa-events/shared/models/village';
+import type { OrganizationData } from '@cultuvilla/shared/models/organization';
+import type { InviteTokenData } from '@cultuvilla/shared/models/village';
 
 export default function VillageAdminPage() {
   const { village, isAdmin } = useVillage();
@@ -5677,11 +5677,11 @@ Replace `firebase.json`:
 
 - [ ] **Step 8: Install functions dependencies**
 
-Run: `cd /home/powervaro/githubs/villa-events/functions && npm install`
+Run: `cd /home/powervaro/githubs/cultuvilla/functions && npm install`
 
 - [ ] **Step 9: Build functions**
 
-Run: `cd /home/powervaro/githubs/villa-events/functions && npm run build`
+Run: `cd /home/powervaro/githubs/cultuvilla/functions && npm run build`
 Expected: Build succeeds
 
 - [ ] **Step 10: Commit**
@@ -5716,7 +5716,7 @@ The new service files in Task 9-14 replace the old ones. Verify the old `index.t
 
 - [ ] **Step 3: Run full build and tests**
 
-Run: `cd /home/powervaro/githubs/villa-events && pnpm --filter @villa-events/shared test && pnpm --filter @villa-events/shared build`
+Run: `cd /home/powervaro/githubs/cultuvilla && pnpm --filter @cultuvilla/shared test && pnpm --filter @cultuvilla/shared build`
 Expected: All tests pass, build succeeds
 
 - [ ] **Step 4: Commit**
@@ -5732,15 +5732,15 @@ git commit -m "chore: remove old models and services, finalize shared package"
 
 - [ ] **Step 1: Build the web app**
 
-Run: `cd /home/powervaro/githubs/villa-events && pnpm --filter villa-events-web build`
+Run: `cd /home/powervaro/githubs/cultuvilla && pnpm --filter cultuvilla-web build`
 
 If there are import errors, fix them — the most common issue will be import paths that reference old files.
 
 - [ ] **Step 2: Fix any build errors found**
 
 Common fixes:
-- Update imports from `@villa-events/shared/models` to use new model paths
-- Update imports from `@villa-events/shared/services` to use new service functions
+- Update imports from `@cultuvilla/shared/models` to use new model paths
+- Update imports from `@cultuvilla/shared/services` to use new service functions
 - Ensure all barrel exports are wired correctly
 
 - [ ] **Step 3: Commit fixes**

@@ -1,11 +1,11 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-import { getVillage } from '@villa-events/shared/services/villageService';
-import { getVillageMember } from '@villa-events/shared/services/villageMemberService';
+import { getVillage } from '@cultuvilla/shared/services/villageService';
+import { getVillageMember } from '@cultuvilla/shared/services/villageMemberService';
 import { useAuth } from './AuthContext';
-import type { VillageData } from '@villa-events/shared/models/village';
-import type { VillageMemberData } from '@villa-events/shared/models/village';
+import type { VillageData } from '@cultuvilla/shared/models/village';
+import type { VillageMemberData } from '@cultuvilla/shared/models/village';
 
 interface VillageContextValue {
   village: (VillageData & { id: string }) | null;

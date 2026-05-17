@@ -3,8 +3,8 @@
 import { use, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { getEvent, updateEvent, updateEventStatus } from '@villa-events/shared/services/eventService';
-import type { EventData } from '@villa-events/shared/models/event';
+import { getEvent, updateEvent, updateEventStatus } from '@cultuvilla/shared/services/eventService';
+import type { EventData } from '@cultuvilla/shared/models/event';
 import { EventForm, type EventFormData } from '@/components/event/EventForm';
 import { SkeletonLoader } from '@/components/common/SkeletonLoader';
 import { ArrowLeft } from 'lucide-react';

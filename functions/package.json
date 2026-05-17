@@ -1,5 +1,5 @@
 {
-  "name": "villa-events-functions",
+  "name": "cultuvilla-functions",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",

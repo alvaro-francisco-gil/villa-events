@@ -2,7 +2,7 @@
 
 **Date:** 2026-04-29
 **Status:** Design approved, plan pending
-**Supersedes structural decisions in:** `2026-04-05-villa-events-design.md` (event/org placement and home page behavior)
+**Supersedes structural decisions in:** `2026-04-05-cultuvilla-design.md` (event/org placement and home page behavior)
 
 ## 1. Vision
 

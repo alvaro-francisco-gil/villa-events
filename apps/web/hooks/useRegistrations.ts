@@ -3,8 +3,8 @@ import {
   getEventRegistrations,
   getUserRegistrations,
   getConfirmedCount,
-} from '@villa-events/shared/services/registrationService';
-import type { RegistrationData } from '@villa-events/shared/models/event';
+} from '@cultuvilla/shared/services/registrationService';
+import type { RegistrationData } from '@cultuvilla/shared/models/event';
 import { useAuth } from '@/hooks/useAuth';
 
 export function useRegistrations(eventId: string) {

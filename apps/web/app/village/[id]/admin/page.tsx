@@ -10,16 +10,16 @@ import {
   getOrganizationsByVillage,
   approveOrganization,
   rejectOrganization,
-} from '@villa-events/shared/services/organizationService';
-import { addOrgMember } from '@villa-events/shared/services/orgMemberService';
+} from '@cultuvilla/shared/services/organizationService';
+import { addOrgMember } from '@cultuvilla/shared/services/orgMemberService';
 import {
   createInviteToken,
   getInviteTokens,
   deleteInviteToken,
-} from '@villa-events/shared/services/inviteTokenService';
-import { getVillageMembers } from '@villa-events/shared/services/villageMemberService';
-import type { OrganizationData } from '@villa-events/shared/models/organization';
-import type { InviteTokenData } from '@villa-events/shared/models/village';
+} from '@cultuvilla/shared/services/inviteTokenService';
+import { getVillageMembers } from '@cultuvilla/shared/services/villageMemberService';
+import type { OrganizationData } from '@cultuvilla/shared/models/organization';
+import type { InviteTokenData } from '@cultuvilla/shared/models/village';
 import { OrgCard } from '@/components/organization/OrgCard';
 import { SkeletonLoader } from '@/components/common/SkeletonLoader';
 import { ArrowLeft, Plus, Copy, Trash2, Users, Link as LinkIcon, ClipboardList } from 'lucide-react';

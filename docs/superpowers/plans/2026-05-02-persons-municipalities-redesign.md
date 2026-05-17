@@ -1440,8 +1440,8 @@ git commit -m "chore: remove PersonaDataModel and personaService (replaced by pe
 'use client'
 
 import { Pencil, Trash2, User } from 'lucide-react'
-import type { PersonData } from '@villa-events/shared/models/person'
-import { buildDisplayName } from '@villa-events/shared/models/person'
+import type { PersonData } from '@cultuvilla/shared/models/person'
+import { buildDisplayName } from '@cultuvilla/shared/models/person'
 
 interface PersonCardProps {
   person: PersonData & { id: string }
@@ -1533,7 +1533,7 @@ Note: Municipality/barrio pickers and occupation multi-select require fetching r
 
 import { useRef, useState } from 'react'
 import { Camera, User } from 'lucide-react'
-import type { PersonData, PartialDate } from '@villa-events/shared/models/person'
+import type { PersonData, PartialDate } from '@cultuvilla/shared/models/person'
 
 type Sex = 'male' | 'female' | 'other'
 
@@ -1757,8 +1757,8 @@ git commit -m "feat: add PersonForm with full name, sex, partial dates, bio, pho
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { getPersonsByCreator } from '@villa-events/shared/services/personService'
-import type { PersonData } from '@villa-events/shared/models/person'
+import { getPersonsByCreator } from '@cultuvilla/shared/services/personService'
+import type { PersonData } from '@cultuvilla/shared/models/person'
 import { useAuth } from './useAuth'
 
 export function usePersons() {
@@ -1794,10 +1794,10 @@ import Link from 'next/link'
 import { ArrowLeft, Plus } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { usePersons } from '@/hooks/usePersons'
-import { createPerson, updatePerson, deletePerson } from '@villa-events/shared/services/personService'
-import { uploadPersonImage } from '@villa-events/shared/services/imageService'
-import type { PersonData, PartialDate } from '@villa-events/shared/models/person'
-import type { Sex } from '@villa-events/shared/models/person'
+import { createPerson, updatePerson, deletePerson } from '@cultuvilla/shared/services/personService'
+import { uploadPersonImage } from '@cultuvilla/shared/services/imageService'
+import type { PersonData, PartialDate } from '@cultuvilla/shared/models/person'
+import type { Sex } from '@cultuvilla/shared/models/person'
 import { PersonCard } from '@/components/profile/PersonCard'
 import { PersonForm } from '@/components/profile/PersonForm'
 import { SkeletonLoader } from '@/components/common/SkeletonLoader'

@@ -5,7 +5,7 @@ import { ImagePlus, Star, X } from 'lucide-react';
 import {
   uploadVillageImage,
   deleteImageByURL,
-} from '@villa-events/shared/services/imageService';
+} from '@cultuvilla/shared/services/imageService';
 
 interface VillageImagesInputProps {
   villageId: string;

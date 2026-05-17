@@ -1,8 +1,8 @@
 'use client'
 
 import { Pencil, Trash2, User } from 'lucide-react'
-import type { PersonData } from '@villa-events/shared/models/person'
-import { buildDisplayName } from '@villa-events/shared/models/person'
+import type { PersonData } from '@cultuvilla/shared/models/person'
+import { buildDisplayName } from '@cultuvilla/shared/models/person'
 
 interface PersonCardProps {
   person: PersonData & { id: string }

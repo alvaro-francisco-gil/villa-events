@@ -10,9 +10,9 @@ import {
   GoogleAuthProvider,
   type User,
 } from 'firebase/auth';
-import { auth } from '@villa-events/shared/firebase';
-import { getUserProfile } from '@villa-events/shared/services/userService';
-import type { UserData } from '@villa-events/shared/models/user';
+import { auth } from '@cultuvilla/shared/firebase';
+import { getUserProfile } from '@cultuvilla/shared/services/userService';
+import type { UserData } from '@cultuvilla/shared/models/user';
 
 type Profile = (UserData & { id: string }) | null;
 

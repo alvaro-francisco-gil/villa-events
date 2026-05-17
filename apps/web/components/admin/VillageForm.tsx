@@ -6,15 +6,15 @@ import {
   createVillage,
   generateVillageId,
   updateVillage,
-} from '@villa-events/shared/services/villageService';
-import { setActiveVillage } from '@villa-events/shared/services/userService';
+} from '@cultuvilla/shared/services/villageService';
+import { setActiveVillage } from '@cultuvilla/shared/services/userService';
 import {
   COUNTRIES,
   COMUNIDADES_AUTONOMAS,
   PROVINCIAS_BY_COMUNIDAD,
   type ComunidadAutonoma,
   type VillageData,
-} from '@villa-events/shared/models/village';
+} from '@cultuvilla/shared/models/village';
 import { UserPicker } from './UserPicker';
 import { LocationPicker } from './LocationPicker';
 import { BarriosInput } from './BarriosInput';

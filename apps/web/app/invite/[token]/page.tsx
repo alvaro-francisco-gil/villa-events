@@ -3,10 +3,10 @@
 import { use, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { acceptInvite, validateInviteToken } from '@villa-events/shared/services/inviteTokenService';
-import { isVillageMember } from '@villa-events/shared/services/villageMemberService';
-import { getVillage } from '@villa-events/shared/services/villageService';
-import type { VillageData } from '@villa-events/shared/models/village';
+import { acceptInvite, validateInviteToken } from '@cultuvilla/shared/services/inviteTokenService';
+import { isVillageMember } from '@cultuvilla/shared/services/villageMemberService';
+import { getVillage } from '@cultuvilla/shared/services/villageService';
+import type { VillageData } from '@cultuvilla/shared/models/village';
 import { useAuth } from '@/hooks/useAuth';
 import { CheckCircle, XCircle, Loader, MapPin } from 'lucide-react';
 
@@ -16,7 +16,7 @@ interface InvitePageProps {
 
 type State = 'loading' | 'invalid' | 'already-member' | 'joining' | 'joined' | 'unauthenticated' | 'error';
 
-const PENDING_INVITE_KEY = 'villa-events:pendingInvite';
+const PENDING_INVITE_KEY = 'cultuvilla:pendingInvite';
 
 export default function InvitePage({ params }: InvitePageProps) {
   const { token } = use(params);

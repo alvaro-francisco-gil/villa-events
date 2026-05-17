@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import type { EventData } from '@villa-events/shared/models/event';
-import type { LocationData } from '@villa-events/shared/models/core';
+import type { EventData } from '@cultuvilla/shared/models/event';
+import type { LocationData } from '@cultuvilla/shared/models/core';
 
 export interface EventFormData {
   title: string;

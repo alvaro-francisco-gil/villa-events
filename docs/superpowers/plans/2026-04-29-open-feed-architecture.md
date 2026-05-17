@@ -78,7 +78,7 @@ apps/web/app/village/[id]/org/                              ← whole subtree
 
 - [ ] **Step 1: Read existing tests to confirm baseline**
 
-Run: `pnpm --filter @villa-events/shared test -- EventDataModel`
+Run: `pnpm --filter @cultuvilla/shared test -- EventDataModel`
 Expected: PASS (existing tests should be green before changing).
 
 - [ ] **Step 2: Write failing test for new denormalized fields**
@@ -131,7 +131,7 @@ describe('EventDataModel — village denormalization', () => {
 });
 ```
 
-Run: `pnpm --filter @villa-events/shared test -- EventDataModel`
+Run: `pnpm --filter @cultuvilla/shared test -- EventDataModel`
 Expected: FAIL (`villageId` etc. not on EventData type).
 
 - [ ] **Step 3: Update `EventDataModel.ts`**
@@ -226,7 +226,7 @@ export function isEventSignupOpen(event: EventData): boolean {
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `pnpm --filter @villa-events/shared test -- EventDataModel`
+Run: `pnpm --filter @cultuvilla/shared test -- EventDataModel`
 Expected: PASS.
 
 - [ ] **Step 5: Commit**
@@ -285,7 +285,7 @@ describe('OrganizationDataModel', () => {
 });
 ```
 
-Run: `pnpm --filter @villa-events/shared test -- OrganizationDataModel`
+Run: `pnpm --filter @cultuvilla/shared test -- OrganizationDataModel`
 Expected: FAIL (`villageId` not on type).
 
 - [ ] **Step 2: Update model**
@@ -337,7 +337,7 @@ export function buildOrganizationData(input: OrganizationDataInput): Organizatio
 
 - [ ] **Step 3: Verify test passes**
 
-Run: `pnpm --filter @villa-events/shared test -- OrganizationDataModel`
+Run: `pnpm --filter @cultuvilla/shared test -- OrganizationDataModel`
 Expected: PASS.
 
 - [ ] **Step 4: Commit**
@@ -508,7 +508,7 @@ export async function deleteEvent(eventId: string): Promise<void> {
 
 - [ ] **Step 2: Type-check the package**
 
-Run: `pnpm --filter @villa-events/shared build`
+Run: `pnpm --filter @cultuvilla/shared build`
 Expected: PASS (the only consumers of the old `villageId` arg are not in this package; we'll fix them in later tasks).
 
 - [ ] **Step 3: Commit**
@@ -637,7 +637,7 @@ export async function deleteOrganization(orgId: string): Promise<void> {
 
 - [ ] **Step 2: Build the package**
 
-Run: `pnpm --filter @villa-events/shared build`
+Run: `pnpm --filter @cultuvilla/shared build`
 Expected: PASS.
 
 - [ ] **Step 3: Commit**
@@ -705,7 +705,7 @@ export async function isOrgMember(orgId: string, userId: string): Promise<boolea
 
 - [ ] **Step 2: Build**
 
-Run: `pnpm --filter @villa-events/shared build`
+Run: `pnpm --filter @cultuvilla/shared build`
 Expected: PASS.
 
 - [ ] **Step 3: Commit**
@@ -878,7 +878,7 @@ export async function getUserRegistrationsAcrossEvents(
 
 - [ ] **Step 3: Run shared tests**
 
-Run: `pnpm --filter @villa-events/shared test`
+Run: `pnpm --filter @cultuvilla/shared test`
 Expected: PASS.
 
 - [ ] **Step 4: Commit**
@@ -929,7 +929,7 @@ describe('haversineKm', () => {
 });
 ```
 
-Run: `pnpm --filter @villa-events/shared test -- feedHaversine`
+Run: `pnpm --filter @cultuvilla/shared test -- feedHaversine`
 Expected: FAIL.
 
 - [ ] **Step 2: Create the service**
@@ -1014,7 +1014,7 @@ export function filterByDistanceKm<T extends { villageCoordinates: GeoPoint }>(
 
 - [ ] **Step 3: Run tests**
 
-Run: `pnpm --filter @villa-events/shared test -- feedHaversine`
+Run: `pnpm --filter @cultuvilla/shared test -- feedHaversine`
 Expected: PASS.
 
 - [ ] **Step 4: Re-export from services index if barrel exists**
@@ -1029,7 +1029,7 @@ If the file does not exist or is unused (consumers import service files directly
 
 - [ ] **Step 5: Build package**
 
-Run: `pnpm --filter @villa-events/shared build`
+Run: `pnpm --filter @cultuvilla/shared build`
 Expected: PASS.
 
 - [ ] **Step 6: Commit**
@@ -1723,7 +1723,7 @@ Create `apps/web/components/feed/FeedCard.tsx`:
 ```tsx
 import Link from 'next/link';
 import { Calendar, MapPin } from 'lucide-react';
-import type { EventData } from '@villa-events/shared/models/event';
+import type { EventData } from '@cultuvilla/shared/models/event';
 
 interface FeedCardProps {
   event: EventData & { id: string };
@@ -1805,9 +1805,9 @@ Replace `apps/web/app/page.tsx` with:
 
 import { useEffect, useMemo, useState } from 'react';
 import { GeoPoint } from 'firebase/firestore';
-import { getUpcomingFeed, filterByDistanceKm } from '@villa-events/shared/services/feedService';
-import { getVillage } from '@villa-events/shared/services/villageService';
-import type { EventData } from '@villa-events/shared/models/event';
+import { getUpcomingFeed, filterByDistanceKm } from '@cultuvilla/shared/services/feedService';
+import { getVillage } from '@cultuvilla/shared/services/villageService';
+import type { EventData } from '@cultuvilla/shared/models/event';
 import { useAuth } from '@/hooks/useAuth';
 import { FeedCard } from '@/components/feed/FeedCard';
 import { FeedFilterBar } from '@/components/feed/FeedFilterBar';
@@ -1916,13 +1916,13 @@ Replace `apps/web/app/village/[id]/page.tsx` with:
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { getVillage } from '@villa-events/shared/services/villageService';
-import { getEventsByVillage } from '@villa-events/shared/services/eventService';
-import { getOrganizationsByVillage } from '@villa-events/shared/services/organizationService';
-import { isVillageMember } from '@villa-events/shared/services/villageMemberService';
-import type { VillageData } from '@villa-events/shared/models/village';
-import type { EventData } from '@villa-events/shared/models/event';
-import type { OrganizationData } from '@villa-events/shared/models/organization';
+import { getVillage } from '@cultuvilla/shared/services/villageService';
+import { getEventsByVillage } from '@cultuvilla/shared/services/eventService';
+import { getOrganizationsByVillage } from '@cultuvilla/shared/services/organizationService';
+import { isVillageMember } from '@cultuvilla/shared/services/villageMemberService';
+import type { VillageData } from '@cultuvilla/shared/models/village';
+import type { EventData } from '@cultuvilla/shared/models/event';
+import type { OrganizationData } from '@cultuvilla/shared/models/organization';
 import { useAuth } from '@/hooks/useAuth';
 import { FeedCard } from '@/components/feed/FeedCard';
 import { SkeletonLoader } from '@/components/common/SkeletonLoader';
@@ -2111,11 +2111,11 @@ In `apps/web/app/my-signups/page.tsx`:
 
 1. Replace import:
    ```typescript
-   import { getUserRegistrationsAcrossVillages } from '@villa-events/shared/services/registrationService';
+   import { getUserRegistrationsAcrossVillages } from '@cultuvilla/shared/services/registrationService';
    ```
    with:
    ```typescript
-   import { getUserRegistrationsAcrossEvents } from '@villa-events/shared/services/registrationService';
+   import { getUserRegistrationsAcrossEvents } from '@cultuvilla/shared/services/registrationService';
    ```
 
 2. Replace the call site:
@@ -2197,7 +2197,7 @@ export function AttendeeBadge({ isVecino }: AttendeeBadgeProps) {
 In `apps/web/app/event/[eventId]/page.tsx`, after fetching `registrations`, build a `Set<string>` of userIds that are members of the event's village. Use a single read per attendee for now (small attendee counts):
 
 ```typescript
-import { isVillageMember } from '@villa-events/shared/services/villageMemberService';
+import { isVillageMember } from '@cultuvilla/shared/services/villageMemberService';
 // inside the page component:
 const [memberOfVillage, setMemberOfVillage] = useState<Set<string>>(new Set());
 

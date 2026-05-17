@@ -2,9 +2,9 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { GeoPoint } from 'firebase/firestore';
-import { getUpcomingFeed, filterByDistanceKm } from '@villa-events/shared/services/feedService';
-import { getVillage } from '@villa-events/shared/services/villageService';
-import type { EventData } from '@villa-events/shared/models/event';
+import { getUpcomingFeed, filterByDistanceKm } from '@cultuvilla/shared/services/feedService';
+import { getVillage } from '@cultuvilla/shared/services/villageService';
+import type { EventData } from '@cultuvilla/shared/models/event';
 import { useAuth } from '@/hooks/useAuth';
 import { FeedCard } from '@/components/feed/FeedCard';
 import { FeedFilterBar } from '@/components/feed/FeedFilterBar';
@@ -23,9 +23,9 @@ export default function HomePage() {
   useEffect(() => {
     if (authLoading || !profileChecked) return;
     if (typeof window !== 'undefined') {
-      const pending = sessionStorage.getItem('villa-events:pendingInvite');
+      const pending = sessionStorage.getItem('cultuvilla:pendingInvite');
       if (pending) {
-        sessionStorage.removeItem('villa-events:pendingInvite');
+        sessionStorage.removeItem('cultuvilla:pendingInvite');
         window.location.replace(pending);
       }
     }

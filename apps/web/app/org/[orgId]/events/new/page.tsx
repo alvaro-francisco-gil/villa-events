@@ -3,14 +3,14 @@
 import { use, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { getOrganization } from '@villa-events/shared/services/organizationService';
-import { getVillage } from '@villa-events/shared/services/villageService';
-import { createEvent } from '@villa-events/shared/services/eventService';
+import { getOrganization } from '@cultuvilla/shared/services/organizationService';
+import { getVillage } from '@cultuvilla/shared/services/villageService';
+import { createEvent } from '@cultuvilla/shared/services/eventService';
 import { useAuth } from '@/hooks/useAuth';
 import { EventForm, type EventFormData } from '@/components/event/EventForm';
 import { SkeletonLoader } from '@/components/common/SkeletonLoader';
 import { ArrowLeft } from 'lucide-react';
-import type { OrganizationData } from '@villa-events/shared/models/organization';
+import type { OrganizationData } from '@cultuvilla/shared/models/organization';
 
 interface NewEventPageProps {
   params: Promise<{ orgId: string }>;

@@ -1,15 +1,15 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { getVillage } from '@villa-events/shared/services/villageService';
-import { getVillageMember } from '@villa-events/shared/services/villageMemberService';
-import { saveProfileAnswers } from '@villa-events/shared/services/membershipProfileService';
-import { isCensoComplete, missingRequiredAnswers } from '@villa-events/shared/services/censoService';
-import type { VillageData } from '@villa-events/shared/models/village';
+import { getVillage } from '@cultuvilla/shared/services/villageService';
+import { getVillageMember } from '@cultuvilla/shared/services/villageMemberService';
+import { saveProfileAnswers } from '@cultuvilla/shared/services/membershipProfileService';
+import { isCensoComplete, missingRequiredAnswers } from '@cultuvilla/shared/services/censoService';
+import type { VillageData } from '@cultuvilla/shared/models/village';
 import type {
   ProfileAnswers,
   ProfileFormField,
-} from '@villa-events/shared/models/village/CensoTypes';
+} from '@cultuvilla/shared/models/village/CensoTypes';
 import { CensoFormRenderer } from './CensoFormRenderer';
 import { ChevronDown, ChevronUp, CheckCircle, AlertCircle } from 'lucide-react';
 

@@ -1,8 +1,8 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { getPersonsByCreator } from '@villa-events/shared/services/personService'
-import type { PersonData } from '@villa-events/shared/models/person'
+import { getPersonsByCreator } from '@cultuvilla/shared/services/personService'
+import type { PersonData } from '@cultuvilla/shared/models/person'
 import { useAuth } from './useAuth'
 
 export function usePersons() {

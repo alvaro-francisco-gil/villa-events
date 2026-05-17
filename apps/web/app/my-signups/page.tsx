@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
-import { getUserRegistrationsAcrossEvents } from '@villa-events/shared/services/registrationService';
-import type { RegistrationData } from '@villa-events/shared/models/event';
+import { getUserRegistrationsAcrossEvents } from '@cultuvilla/shared/services/registrationService';
+import type { RegistrationData } from '@cultuvilla/shared/models/event';
 import { SkeletonLoader } from '@/components/common/SkeletonLoader';
 import { CalendarCheck, Clock } from 'lucide-react';
 

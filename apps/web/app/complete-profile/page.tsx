@@ -3,10 +3,10 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
-import { createUserProfile } from '@villa-events/shared/services/userService';
-import { acceptInvite } from '@villa-events/shared/services/inviteTokenService';
+import { createUserProfile } from '@cultuvilla/shared/services/userService';
+import { acceptInvite } from '@cultuvilla/shared/services/inviteTokenService';
 
-const PENDING_INVITE_KEY = 'villa-events:pendingInvite';
+const PENDING_INVITE_KEY = 'cultuvilla:pendingInvite';
 
 interface PendingInvite {
   villageId: string;

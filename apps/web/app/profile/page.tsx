@@ -7,13 +7,13 @@ import { useAuth } from '@/hooks/useAuth';
 import {
   setActiveVillage,
   updateUserProfile,
-} from '@villa-events/shared/services/userService';
+} from '@cultuvilla/shared/services/userService';
 import {
   getUserMemberships,
   type UserMembership,
-} from '@villa-events/shared/services/villageMemberService';
-import { getVillage } from '@villa-events/shared/services/villageService';
-import type { VillageData } from '@villa-events/shared/models/village';
+} from '@cultuvilla/shared/services/villageMemberService';
+import { getVillage } from '@cultuvilla/shared/services/villageService';
+import type { VillageData } from '@cultuvilla/shared/models/village';
 import { User, Pencil, Users, LogOut, MapPin, Shield, Settings } from 'lucide-react';
 import { SkeletonLoader } from '@/components/common/SkeletonLoader';
 import { useIsAppAdmin } from '@/hooks/useIsAppAdmin';

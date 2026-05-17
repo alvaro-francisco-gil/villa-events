@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { Calendar, MapPin } from 'lucide-react';
-import type { EventData } from '@villa-events/shared/models/event';
+import type { EventData } from '@cultuvilla/shared/models/event';
 
 interface FeedCardProps {
   event: EventData & { id: string };

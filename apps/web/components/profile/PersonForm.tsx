@@ -2,7 +2,7 @@
 
 import { useRef, useState } from 'react'
 import { Camera, User } from 'lucide-react'
-import type { PersonData, PartialDate } from '@villa-events/shared/models/person'
+import type { PersonData, PartialDate } from '@cultuvilla/shared/models/person'
 
 type Sex = 'male' | 'female' | 'other'
 

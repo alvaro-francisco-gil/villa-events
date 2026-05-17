@@ -5,7 +5,7 @@ import { ProfileGuard } from '@/components/auth/ProfileGuard';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Villa Events',
+  title: 'Cultuvilla',
   description: 'Eventos de tu pueblo',
 };
 

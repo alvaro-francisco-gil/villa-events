@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { Home, CalendarCheck, Bell, User } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useEffect, useState } from 'react';
-import { getUnreadCount } from '@villa-events/shared/services/notificationService';
+import { getUnreadCount } from '@cultuvilla/shared/services/notificationService';
 
 const navItems = [
   { href: '/', icon: Home, label: 'Inicio' },

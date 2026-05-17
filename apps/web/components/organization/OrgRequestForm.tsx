@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import type { OrganizationData } from '@villa-events/shared/models/organization';
+import type { OrganizationData } from '@cultuvilla/shared/models/organization';
 
 interface OrgRequestFormProps {
   onSubmit: (data: { name: string; type: OrganizationData['type']; description: string | null }) => Promise<void>;

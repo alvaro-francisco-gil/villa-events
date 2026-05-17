@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import type { VillageData } from '@villa-events/shared/models/village';
+import type { VillageData } from '@cultuvilla/shared/models/village';
 import { MapPin } from 'lucide-react';
 
 interface VillageCardProps {

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import type { EventData } from '@villa-events/shared/models/event';
+import type { EventData } from '@cultuvilla/shared/models/event';
 import { Calendar, MapPin, Users, Tag } from 'lucide-react';
 
 interface EventCardProps {

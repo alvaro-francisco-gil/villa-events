@@ -14,7 +14,7 @@ importers:
 
   apps/web:
     dependencies:
-      '@villa-events/shared':
+      '@cultuvilla/shared':
         specifier: workspace:*
         version: link:../../packages/shared
       firebase:

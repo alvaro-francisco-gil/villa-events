@@ -1,11 +1,11 @@
 'use client';
 
-import { getPredefinedField } from '@villa-events/shared/models/village/profileFieldRegistry';
+import { getPredefinedField } from '@cultuvilla/shared/models/village/profileFieldRegistry';
 import type {
   ProfileFormField,
   ProfileAnswers,
   FieldType,
-} from '@villa-events/shared/models/village/CensoTypes';
+} from '@cultuvilla/shared/models/village/CensoTypes';
 
 interface Props {
   fields: ProfileFormField[];

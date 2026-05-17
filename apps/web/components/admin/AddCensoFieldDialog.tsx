@@ -4,12 +4,12 @@ import { useMemo, useState } from 'react';
 import {
   listPredefinedFields,
   type PredefinedFieldDefinition,
-} from '@villa-events/shared/models/village/profileFieldRegistry';
+} from '@cultuvilla/shared/models/village/profileFieldRegistry';
 import {
   slugifyFieldKey,
   type ProfileFormField,
   type FieldType,
-} from '@villa-events/shared/models/village/CensoTypes';
+} from '@cultuvilla/shared/models/village/CensoTypes';
 import { X } from 'lucide-react';
 
 interface Props {
