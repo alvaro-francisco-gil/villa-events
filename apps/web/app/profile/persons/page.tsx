@@ -8,7 +8,8 @@ import { useAuth } from '@/hooks/useAuth'
 import { usePersons } from '@/hooks/usePersons'
 import { createPerson, updatePerson, deletePerson } from '@cultuvilla/shared/services/personService'
 import { uploadPersonImage } from '@cultuvilla/shared/services/imageService'
-import type { PersonData, PartialDate } from '@cultuvilla/shared/models/person'
+import { proposeOccupation } from '@cultuvilla/shared/services/occupationService'
+import type { PersonData, PartialDate, MunicipalityLink, BurialPlace } from '@cultuvilla/shared/models/person'
 import type { Sex } from '@cultuvilla/shared/models/person'
 import { PersonCard } from '@/components/profile/PersonCard'
 import { PersonForm } from '@/components/profile/PersonForm'
@@ -25,6 +26,20 @@ type FormData = {
   deathDate: PartialDate | null
   biography: string | null
   photoFile: File | null
+  birthPlace: MunicipalityLink | null
+  municipalityLinks: MunicipalityLink[]
+  burialPlace: BurialPlace | null
+  occupationIds: string[]
+  pendingOccupations: string[]
+}
+
+async function proposeNewPendingOccupations(previous: string[], next: string[], userId: string) {
+  const prevSet = new Set(previous.map(s => s.toLowerCase()))
+  for (const name of next) {
+    if (!prevSet.has(name.toLowerCase())) {
+      await proposeOccupation(name, userId)
+    }
+  }
 }
 
 export default function PersonsPage() {
@@ -50,16 +65,23 @@ export default function PersonsPage() {
   if (!user) return null
 
   const handleAdd = async (data: FormData) => {
-    const personId = await createPerson({ ...data, createdBy: user.uid })
+    const personId = await createPerson({
+      ...data,
+      createdBy: user.uid,
+    })
     if (data.photoFile) {
       const photoURL = await uploadPersonImage(personId, data.photoFile)
       await updatePerson(personId, { photoURL })
     }
+    await proposeNewPendingOccupations([], data.pendingOccupations, user.uid)
     setShowAddForm(false)
     reload()
   }
 
   const handleEdit = async (personId: string, data: FormData) => {
+    const existing = persons.find(p => p.id === personId)
+    const existingPending = existing?.pendingOccupations ?? []
+
     let photoURL: string | undefined
     if (data.photoFile) {
       photoURL = await uploadPersonImage(personId, data.photoFile)
@@ -74,8 +96,14 @@ export default function PersonsPage() {
       birthday: data.birthday,
       deathDate: data.deathDate,
       biography: data.biography,
+      birthPlace: data.birthPlace,
+      municipalityLinks: data.municipalityLinks,
+      burialPlace: data.burialPlace,
+      occupationIds: data.occupationIds,
+      pendingOccupations: data.pendingOccupations,
       ...(photoURL !== undefined && { photoURL }),
     })
+    await proposeNewPendingOccupations(existingPending, data.pendingOccupations, user.uid)
     setEditingId(null)
     reload()
   }
@@ -124,7 +152,23 @@ export default function PersonsPage() {
               <div key={person.id} className="bg-white border border-gray-200 rounded-xl p-4">
                 <h2 className="text-sm font-semibold text-gray-700 mb-3">Editar</h2>
                 <PersonForm
-                  initial={person}
+                  initial={{
+                    givenName: person.givenName,
+                    middleNames: person.middleNames,
+                    firstSurname: person.firstSurname,
+                    secondSurname: person.secondSurname,
+                    nickname: person.nickname,
+                    sex: person.sex,
+                    birthday: person.birthday,
+                    deathDate: person.deathDate,
+                    biography: person.biography,
+                    photoURL: person.photoURL,
+                    birthPlace: person.birthPlace,
+                    municipalityLinks: person.municipalityLinks,
+                    burialPlace: person.burialPlace,
+                    occupationIds: person.occupationIds,
+                    pendingOccupations: person.pendingOccupations,
+                  }}
                   onSubmit={data => handleEdit(person.id, data)}
                   onCancel={() => setEditingId(null)}
                 />
