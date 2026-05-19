@@ -12,13 +12,13 @@ interface InviteProfileInput {
 }
 
 interface AcceptInviteData {
-  villageId?: string;
+  municipalityId?: string;
   tokenId?: string;
   profile?: InviteProfileInput;
 }
 
 interface AcceptInviteResult {
-  villageId: string;
+  municipalityId: string;
   alreadyMember: boolean;
   profileCreated: boolean;
 }
@@ -29,27 +29,27 @@ export const acceptInvite = onCall<AcceptInviteData, Promise<AcceptInviteResult>
     const auth = request.auth;
     if (!auth) throw new HttpsError('unauthenticated', 'Debes iniciar sesión.');
 
-    const { villageId, tokenId, profile } = request.data ?? {};
-    if (!villageId || !tokenId) {
+    const { municipalityId, tokenId, profile } = request.data ?? {};
+    if (!municipalityId || !tokenId) {
       throw new HttpsError('invalid-argument', 'Faltan parámetros.');
     }
 
     const userId = auth.uid;
 
-    const villageRef = db.doc(`villages/${villageId}`);
-    const tokenRef = db.doc(`villages/${villageId}/inviteTokens/${tokenId}`);
-    const memberRef = db.doc(`villages/${villageId}/members/${userId}`);
+    const municipalityRef = db.doc(`municipalities/${municipalityId}`);
+    const tokenRef = db.doc(`municipalities/${municipalityId}/inviteTokens/${tokenId}`);
+    const memberRef = db.doc(`municipalities/${municipalityId}/members/${userId}`);
     const userRef = db.doc(`users/${userId}`);
 
     return db.runTransaction(async (tx) => {
-      const [villageSnap, tokenSnap, memberSnap, userSnap] = await Promise.all([
-        tx.get(villageRef),
+      const [municipalitySnap, tokenSnap, memberSnap, userSnap] = await Promise.all([
+        tx.get(municipalityRef),
         tx.get(tokenRef),
         tx.get(memberRef),
         tx.get(userRef),
       ]);
 
-      if (!villageSnap.exists) {
+      if (!municipalitySnap.exists) {
         throw new HttpsError('not-found', 'El pueblo no existe.');
       }
 
@@ -66,7 +66,6 @@ export const acceptInvite = onCall<AcceptInviteData, Promise<AcceptInviteResult>
       let profileCreated = false;
       if (!userSnap.exists) {
         if (!profile) {
-          // Profile is required to enroll a brand-new user.
           throw new HttpsError(
             'failed-precondition',
             'Falta el perfil del usuario.',
@@ -86,7 +85,7 @@ export const acceptInvite = onCall<AcceptInviteData, Promise<AcceptInviteResult>
           biography: null,
           telephone: null,
           photoURL: profile.photoURL ?? null,
-          activeVillageId: villageId,
+          activeMunicipalityId: municipalityId,
           createdAt: admin.firestore.FieldValue.serverTimestamp(),
         });
         const personRef = db.collection('persons').doc()
@@ -113,12 +112,11 @@ export const acceptInvite = onCall<AcceptInviteData, Promise<AcceptInviteResult>
         await db.collection('users').doc(userId).update({ personId: personRef.id })
         profileCreated = true;
       } else {
-        // Existing user: just point them at this village.
-        tx.set(userRef, { activeVillageId: villageId }, { merge: true });
+        tx.set(userRef, { activeMunicipalityId: municipalityId }, { merge: true });
       }
 
       if (memberSnap.exists) {
-        return { villageId, alreadyMember: true, profileCreated };
+        return { municipalityId, alreadyMember: true, profileCreated };
       }
 
       tx.set(memberRef, {
@@ -132,7 +130,7 @@ export const acceptInvite = onCall<AcceptInviteData, Promise<AcceptInviteResult>
         usageCount: admin.firestore.FieldValue.increment(1),
       });
 
-      return { villageId, alreadyMember: false, profileCreated };
+      return { municipalityId, alreadyMember: false, profileCreated };
     });
   },
 );

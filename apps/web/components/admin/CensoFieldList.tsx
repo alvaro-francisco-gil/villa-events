@@ -1,10 +1,10 @@
 'use client';
 
-import { getPredefinedField } from '@cultuvilla/shared/models/village/profileFieldRegistry';
+import { getPredefinedField } from '@cultuvilla/shared/models/municipality/profileFieldRegistry';
 import type {
   ProfileFormField,
   FieldType,
-} from '@cultuvilla/shared/models/village/CensoTypes';
+} from '@cultuvilla/shared/models/municipality/CensoTypes';
 import { ArrowUp, ArrowDown, Trash2, Lock } from 'lucide-react';
 
 interface Props {

@@ -3,7 +3,7 @@ import {
   COUNTRIES,
   COMUNIDADES_AUTONOMAS,
   PROVINCIAS_BY_COMUNIDAD,
-} from '../../src/models/village/SpainGeography';
+} from '../../src/models/municipality/SpainGeography';
 
 describe('SpainGeography', () => {
   it('lists España as the only country', () => {

@@ -7,7 +7,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useVillage } from '@/hooks/useVillage';
 import { useIsAppAdmin } from '@/hooks/useIsAppAdmin';
 import {
-  getOrganizationsByVillage,
+  getOrganizationsByMunicipality,
   approveOrganization,
   rejectOrganization,
 } from '@cultuvilla/shared/services/organizationService';
@@ -19,7 +19,7 @@ import {
 } from '@cultuvilla/shared/services/inviteTokenService';
 import { getVillageMembers } from '@cultuvilla/shared/services/villageMemberService';
 import type { OrganizationData } from '@cultuvilla/shared/models/organization';
-import type { InviteTokenData } from '@cultuvilla/shared/models/village';
+import type { InviteTokenData } from '@cultuvilla/shared/models/municipality';
 import { OrgCard } from '@/components/organization/OrgCard';
 import { SkeletonLoader } from '@/components/common/SkeletonLoader';
 import { ArrowLeft, Plus, Copy, Trash2, Users, Link as LinkIcon, ClipboardList } from 'lucide-react';
@@ -29,7 +29,7 @@ interface AdminPageProps {
 }
 
 export default function VillageAdminPage({ params }: AdminPageProps) {
-  const { id: villageId } = use(params);
+  const { id: municipalityId } = use(params);
   const { user } = useAuth();
   const { isAdmin, loading: villageLoading } = useVillage();
   const { isAppAdmin, loading: appAdminLoading } = useIsAppAdmin();
@@ -45,16 +45,16 @@ export default function VillageAdminPage({ params }: AdminPageProps) {
 
   useEffect(() => {
     if (villageLoading || appAdminLoading) return;
-    if (!canManage) router.push(`/village/${villageId}`);
-  }, [canManage, villageLoading, appAdminLoading, router, villageId]);
+    if (!canManage) router.push(`/village/${municipalityId}`);
+  }, [canManage, villageLoading, appAdminLoading, router, municipalityId]);
 
   useEffect(() => {
     if (!canManage) return;
     async function load() {
       const [allOrgs, allTokens, members] = await Promise.all([
-        getOrganizationsByVillage(villageId),
-        getInviteTokens(villageId),
-        getVillageMembers(villageId),
+        getOrganizationsByMunicipality(municipalityId),
+        getInviteTokens(municipalityId),
+        getVillageMembers(municipalityId),
       ]);
       setOrgs(allOrgs);
       setTokens(allTokens);
@@ -62,11 +62,10 @@ export default function VillageAdminPage({ params }: AdminPageProps) {
       setLoading(false);
     }
     load();
-  }, [villageId, canManage]);
+  }, [municipalityId, canManage]);
 
   const handleApprove = async (orgId: string) => {
     await approveOrganization(orgId, user!.uid);
-    // Also add the requester as org member
     const org = orgs.find((o) => o.id === orgId);
     if (org) {
       await addOrgMember(orgId, org.requestedBy);
@@ -82,11 +81,10 @@ export default function VillageAdminPage({ params }: AdminPageProps) {
   const handleCreateToken = async () => {
     setCreatingToken(true);
     try {
-      const tokenId = await createInviteToken(villageId);
-      const newTokens = await getInviteTokens(villageId);
+      const tokenId = await createInviteToken(municipalityId);
+      const newTokens = await getInviteTokens(municipalityId);
       setTokens(newTokens);
-      // Copy immediately
-      const url = `${window.location.origin}/invite/${tokenId}?v=${villageId}`;
+      const url = `${window.location.origin}/invite/${tokenId}?v=${municipalityId}`;
       await navigator.clipboard.writeText(url);
       setCopiedId(tokenId);
       setTimeout(() => setCopiedId(null), 2000);
@@ -96,7 +94,7 @@ export default function VillageAdminPage({ params }: AdminPageProps) {
   };
 
   const handleCopyToken = async (tokenId: string) => {
-    const url = `${window.location.origin}/invite/${tokenId}?v=${villageId}`;
+    const url = `${window.location.origin}/invite/${tokenId}?v=${municipalityId}`;
     await navigator.clipboard.writeText(url);
     setCopiedId(tokenId);
     setTimeout(() => setCopiedId(null), 2000);
@@ -104,7 +102,7 @@ export default function VillageAdminPage({ params }: AdminPageProps) {
 
   const handleDeleteToken = async (tokenId: string) => {
     if (!confirm('¿Eliminar este enlace de invitación?')) return;
-    await deleteInviteToken(villageId, tokenId);
+    await deleteInviteToken(municipalityId, tokenId);
     setTokens((prev) => prev.filter((t) => t.id !== tokenId));
   };
 
@@ -125,7 +123,7 @@ export default function VillageAdminPage({ params }: AdminPageProps) {
 
   return (
     <div className="px-4 py-6">
-      <Link href={`/village/${villageId}`} className="flex items-center gap-1 text-blue-600 text-sm mb-4">
+      <Link href={`/village/${municipalityId}`} className="flex items-center gap-1 text-blue-600 text-sm mb-4">
         <ArrowLeft size={16} /> Volver al pueblo
       </Link>
 
@@ -142,7 +140,7 @@ export default function VillageAdminPage({ params }: AdminPageProps) {
 
       {/* Censo link */}
       <Link
-        href={`/village/${villageId}/admin/censo`}
+        href={`/village/${municipalityId}/admin/censo`}
         className="bg-white border border-gray-200 rounded-xl p-4 mb-6 flex items-center gap-3 hover:border-blue-400 hover:bg-blue-50 transition"
       >
         <ClipboardList size={20} className="text-blue-500 shrink-0" />

@@ -13,17 +13,18 @@ import { onRegistrationDeleted } from '../../waitlistPromotion';
 
 const ft = functionsTestFactory({ projectId: process.env.GCLOUD_PROJECT || 'cultuvilla-test' });
 
-const VILLAGE_ID = 'v1';
+const MUNICIPALITY_ID = 'mun-1';
 const EVENT_ID = 'e1';
 
 function regPath(regId: string): string {
-  return `villages/${VILLAGE_ID}/events/${EVENT_ID}/registrations/${regId}`;
+  return `events/${EVENT_ID}/registrations/${regId}`;
 }
 
 async function seedEvent(opts: { title: string; maxAttendees: number | null }): Promise<void> {
-  await admin.firestore().doc(`villages/${VILLAGE_ID}/events/${EVENT_ID}`).set({
+  await admin.firestore().doc(`events/${EVENT_ID}`).set({
     title: opts.title,
     maxAttendees: opts.maxAttendees,
+    municipalityId: MUNICIPALITY_ID,
   });
 }
 
@@ -53,7 +54,7 @@ async function invokeDelete(reg: SeedReg): Promise<void> {
   const wrapped = ft.wrap(onRegistrationDeleted as unknown as Parameters<typeof ft.wrap>[0]);
   await wrapped({
     data: snap,
-    params: { villageId: VILLAGE_ID, eventId: EVENT_ID, regId: reg.id },
+    params: { eventId: EVENT_ID, regId: reg.id },
   } as unknown as Parameters<typeof wrapped>[0]);
 }
 
@@ -143,7 +144,7 @@ describe('onRegistrationDeleted (waitlist promotion)', () => {
     const notif = notifs.docs[0].data();
     expect(notif.type).toBe('waitlist_promoted');
     expect(notif.eventId).toBe(EVENT_ID);
-    expect(notif.villageId).toBe(VILLAGE_ID);
+    expect(notif.municipalityId).toBe(MUNICIPALITY_ID);
     expect(notif.read).toBe(false);
     expect(notif.body).toContain('Fiesta del pueblo');
     expect(notif.body).toContain('Bob');

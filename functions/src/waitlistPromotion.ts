@@ -3,20 +3,24 @@ import * as admin from 'firebase-admin';
 
 const db = admin.firestore();
 
+/**
+ * Promotes the next waitlisted registration when a confirmed one is deleted.
+ * Watches top-level /events/{eventId}/registrations/{regId}.
+ */
 export const onRegistrationDeleted = onDocumentDeleted(
-  'villages/{villageId}/events/{eventId}/registrations/{regId}',
+  'events/{eventId}/registrations/{regId}',
   async (event) => {
-    const { villageId, eventId } = event.params;
+    const { eventId } = event.params;
     const deletedData = event.data?.data();
 
     if (!deletedData || deletedData.status !== 'confirmed') return;
 
-    const eventSnap = await db.doc(`villages/${villageId}/events/${eventId}`).get();
+    const eventSnap = await db.doc(`events/${eventId}`).get();
     const eventData = eventSnap.data();
     if (!eventData?.maxAttendees) return;
 
     const waitlisted = await db
-      .collection(`villages/${villageId}/events/${eventId}/registrations`)
+      .collection(`events/${eventId}/registrations`)
       .where('status', '==', 'waitlisted')
       .orderBy('position', 'asc')
       .limit(1)
@@ -34,7 +38,7 @@ export const onRegistrationDeleted = onDocumentDeleted(
       title: '¡Plaza confirmada!',
       body: `Se ha liberado una plaza en "${eventData.title}" para ${nextData.name}`,
       eventId,
-      villageId,
+      municipalityId: (eventData.municipalityId as string | undefined) ?? null,
       read: false,
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     });

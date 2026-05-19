@@ -79,7 +79,7 @@ export default function OrgPage() {
 
   return (
     <div className="px-4 py-6">
-      <Link href={`/village/${org.villageId}`} className="flex items-center gap-1 text-blue-600 text-sm mb-4">
+      <Link href={`/village/${org.municipalityId}`} className="flex items-center gap-1 text-blue-600 text-sm mb-4">
         <ArrowLeft size={16} /> {org.name}
       </Link>
 
@@ -124,7 +124,7 @@ export default function OrgPage() {
               >
                 <div className="flex items-center gap-1 text-xs text-gray-500 mb-1">
                   <MapPin size={12} />
-                  <span>{event.villageName}</span>
+                  <span>{event.municipalityName}</span>
                 </div>
                 <h3 className="text-base font-semibold text-gray-900 line-clamp-1">{event.title}</h3>
                 <div className="flex items-center gap-1 text-xs text-gray-500 mt-1">

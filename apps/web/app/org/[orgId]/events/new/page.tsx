@@ -4,7 +4,7 @@ import { use, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { getOrganization } from '@cultuvilla/shared/services/organizationService';
-import { getVillage } from '@cultuvilla/shared/services/villageService';
+import { getMunicipality } from '@cultuvilla/shared/services/municipalityService';
 import { createEvent } from '@cultuvilla/shared/services/eventService';
 import { useAuth } from '@/hooks/useAuth';
 import { EventForm, type EventFormData } from '@/components/event/EventForm';
@@ -28,18 +28,18 @@ export default function NewEventPage({ params }: NewEventPageProps) {
 
   const handleSubmit = async (data: EventFormData) => {
     if (!user || !org) return;
-    const village = await getVillage(org.villageId);
-    const villageImages = village?.images ?? [];
+    const municipality = await getMunicipality(org.municipalityId);
+    const coverImages = municipality?.community?.coverImages ?? [];
     const newId = await createEvent({
       ...data,
       organizationId: orgId,
       organizationName: org.name,
       createdBy: user.uid,
       status: 'draft',
-      villageId: org.villageId,
-      villageName: village?.name ?? '',
-      villageCoverImage: villageImages.length > 0 ? villageImages[0] : null,
-      villageCoordinates: village?.coordinates ?? null,
+      municipalityId: org.municipalityId,
+      municipalityName: municipality?.name ?? '',
+      municipalityCoverImage: coverImages.length > 0 ? coverImages[0] : null,
+      municipalityCoordinates: municipality?.coordinates ?? null,
     });
     router.push(`/event/${newId}`);
   };

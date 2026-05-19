@@ -1,16 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import { VillageFormSchema } from '../../src/models/village/VillageFormSchema';
+import { VillageFormSchema } from '../../src/models/municipality/VillageFormSchema';
 
 const validBase = {
-  name: 'Becerril',
+  municipalityId: 'mun-1',
   description: 'Pueblo de la sierra',
-  country: 'España',
-  comunidadAutonoma: 'Madrid' as const,
-  provincia: 'Madrid',
-  location: { lat: 40.7, lng: -3.9, displayName: 'Madrid' },
-  barrios: [],
-  images: [],
   adminUserId: 'user-1',
+  coverImages: [],
+  location: { lat: 40.7, lng: -3.9, displayName: 'Madrid' },
 };
 
 describe('VillageFormSchema', () => {
@@ -18,56 +14,32 @@ describe('VillageFormSchema', () => {
     const result = VillageFormSchema.safeParse(validBase);
     expect(result.success).toBe(true);
     if (!result.success) return;
-    expect(result.data.name).toBe('Becerril');
-    expect(result.data.barrios).toEqual([]);
-    expect(result.data.images).toEqual([]);
+    expect(result.data.municipalityId).toBe('mun-1');
+    expect(result.data.description).toBe('Pueblo de la sierra');
+    expect(result.data.coverImages).toEqual([]);
   });
 
-  it('rejects an empty name', () => {
-    const result = VillageFormSchema.safeParse({ ...validBase, name: '   ' });
+  it('rejects an empty municipalityId', () => {
+    const result = VillageFormSchema.safeParse({ ...validBase, municipalityId: '' });
     expect(result.success).toBe(false);
     if (result.success) return;
-    const err = result.error.issues.find((i) => i.path[0] === 'name');
-    expect(err?.message).toBe('El nombre es obligatorio');
+    const err = result.error.issues.find((i) => i.path[0] === 'municipalityId');
+    expect(err?.message).toBe('Selecciona un municipio');
   });
 
   it('rejects an empty description', () => {
     const result = VillageFormSchema.safeParse({ ...validBase, description: '   ' });
     expect(result.success).toBe(false);
-  });
-
-  it('rejects an unknown comunidad autónoma', () => {
-    const result = VillageFormSchema.safeParse({ ...validBase, comunidadAutonoma: 'Asgard' });
-    expect(result.success).toBe(false);
-  });
-
-  it('rejects a provincia that does not belong to its comunidad', () => {
-    const result = VillageFormSchema.safeParse({
-      ...validBase,
-      comunidadAutonoma: 'Madrid',
-      provincia: 'Sevilla',
-    });
-    expect(result.success).toBe(false);
     if (result.success) return;
-    const err = result.error.issues.find((i) => i.path[0] === 'provincia');
-    expect(err).toBeDefined();
+    const err = result.error.issues.find((i) => i.path[0] === 'description');
+    expect(err?.message).toBe('La descripción es obligatoria');
   });
 
-  it('accepts a valid provincia for its comunidad', () => {
-    const result = VillageFormSchema.safeParse({
-      ...validBase,
-      comunidadAutonoma: 'Andalucía',
-      provincia: 'Sevilla',
-    });
+  it('trims the description', () => {
+    const result = VillageFormSchema.safeParse({ ...validBase, description: '  Hola  ' });
     expect(result.success).toBe(true);
-  });
-
-  it('rejects a null location', () => {
-    const result = VillageFormSchema.safeParse({ ...validBase, location: null });
-    expect(result.success).toBe(false);
-    if (result.success) return;
-    const err = result.error.issues.find((i) => i.path[0] === 'location');
-    expect(err?.message).toBe('Selecciona la ubicación');
+    if (!result.success) return;
+    expect(result.data.description).toBe('Hola');
   });
 
   it('rejects an empty adminUserId', () => {
@@ -75,6 +47,30 @@ describe('VillageFormSchema', () => {
     expect(result.success).toBe(false);
     if (result.success) return;
     const err = result.error.issues.find((i) => i.path[0] === 'adminUserId');
-    expect(err?.message).toBe('Selecciona el administrador');
+    expect(err?.message).toBe('Selecciona el coordinador');
+  });
+
+  it('accepts a null location (caller validates required-ness)', () => {
+    const result = VillageFormSchema.safeParse({ ...validBase, location: null });
+    expect(result.success).toBe(true);
+  });
+
+  it('defaults coverImages to []', () => {
+    const { coverImages: _omit, ...withoutImages } = validBase;
+    void _omit;
+    const result = VillageFormSchema.safeParse(withoutImages);
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    expect(result.data.coverImages).toEqual([]);
+  });
+
+  it('preserves provided cover images', () => {
+    const result = VillageFormSchema.safeParse({
+      ...validBase,
+      coverImages: ['https://x/a.jpg', 'https://x/b.jpg'],
+    });
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    expect(result.data.coverImages).toEqual(['https://x/a.jpg', 'https://x/b.jpg']);
   });
 });

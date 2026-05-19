@@ -1,17 +1,18 @@
 'use client';
 
-import { getPredefinedField } from '@cultuvilla/shared/models/village/profileFieldRegistry';
+import { getPredefinedField } from '@cultuvilla/shared/models/municipality/profileFieldRegistry';
 import type {
   ProfileFormField,
   ProfileAnswers,
   FieldType,
-} from '@cultuvilla/shared/models/village/CensoTypes';
+} from '@cultuvilla/shared/models/municipality/CensoTypes';
 
 interface Props {
   fields: ProfileFormField[];
   answers: ProfileAnswers;
   onChange: (next: ProfileAnswers) => void;
-  villageBarrios: string[];
+  /** List of barrio names available to the "barrio" predefined field. */
+  barrios: string[];
   disabled?: boolean;
 }
 
@@ -26,7 +27,7 @@ export function CensoFormRenderer({
   fields,
   answers,
   onChange,
-  villageBarrios,
+  barrios,
   disabled,
 }: Props) {
   if (fields.length === 0) {
@@ -44,7 +45,7 @@ export function CensoFormRenderer({
     const def = getPredefinedField(f.key);
     const label = f.label ?? def?.defaultLabel ?? f.key;
     const type = (def?.type ?? 'text') as FieldType;
-    const options = def?.optionsFromVillageBarrios ? villageBarrios : def?.options;
+    const options = def?.optionsFromBarrios ? barrios : def?.options;
     return { field: f, label, type, options };
   });
 

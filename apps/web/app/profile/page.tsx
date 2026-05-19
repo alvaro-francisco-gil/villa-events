@@ -5,21 +5,21 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
 import {
-  setActiveVillage,
+  setActiveMunicipality,
   updateUserProfile,
 } from '@cultuvilla/shared/services/userService';
 import {
   getUserMemberships,
   type UserMembership,
 } from '@cultuvilla/shared/services/villageMemberService';
-import { getVillage } from '@cultuvilla/shared/services/villageService';
-import type { VillageData } from '@cultuvilla/shared/models/village';
+import { getMunicipality } from '@cultuvilla/shared/services/municipalityService';
+import type { MunicipalityData } from '@cultuvilla/shared/models/municipality';
 import { User, Pencil, Users, LogOut, MapPin, Shield, Settings } from 'lucide-react';
 import { SkeletonLoader } from '@/components/common/SkeletonLoader';
 import { useIsAppAdmin } from '@/hooks/useIsAppAdmin';
 import { VillageCensoSection } from '@/components/profile/VillageCensoSection';
 
-type VillageSummary = VillageData & { id: string };
+type MunicipalitySummary = MunicipalityData & { id: string };
 
 export default function ProfilePage() {
   const { user, loading: authLoading, signOut, profile, refreshProfile } = useAuth();
@@ -33,7 +33,7 @@ export default function ProfilePage() {
   const [error, setError] = useState('');
 
   const [memberships, setMemberships] = useState<UserMembership[]>([]);
-  const [villagesById, setVillagesById] = useState<Record<string, VillageSummary>>({});
+  const [municipalitiesById, setMunicipalitiesById] = useState<Record<string, MunicipalitySummary>>({});
   const [switching, setSwitching] = useState(false);
 
   useEffect(() => {
@@ -51,14 +51,14 @@ export default function ProfilePage() {
     if (!user) return;
     getUserMemberships(user.uid).then(async (mems) => {
       setMemberships(mems);
-      const ids = new Set(mems.map((m) => m.villageId));
-      if (profile?.activeVillageId) ids.add(profile.activeVillageId);
-      const villages = await Promise.all(Array.from(ids).map((id) => getVillage(id)));
-      const map: Record<string, VillageSummary> = {};
-      villages.forEach((v) => { if (v) map[v.id] = v; });
-      setVillagesById(map);
+      const ids = new Set(mems.map((m) => m.municipalityId));
+      if (profile?.activeMunicipalityId) ids.add(profile.activeMunicipalityId);
+      const municipalities = await Promise.all(Array.from(ids).map((id) => getMunicipality(id)));
+      const map: Record<string, MunicipalitySummary> = {};
+      municipalities.forEach((v) => { if (v) map[v.id] = v; });
+      setMunicipalitiesById(map);
     });
-  }, [user, profile?.activeVillageId]);
+  }, [user, profile?.activeMunicipalityId]);
 
   const handleSave = async () => {
     if (!user) return;
@@ -83,13 +83,13 @@ export default function ProfilePage() {
     router.push('/');
   };
 
-  const handleSwitchVillage = async (villageId: string) => {
-    if (!user || villageId === profile?.activeVillageId) return;
+  const handleSwitchVillage = async (municipalityId: string) => {
+    if (!user || municipalityId === profile?.activeMunicipalityId) return;
     setSwitching(true);
     try {
-      await setActiveVillage(user.uid, villageId);
+      await setActiveMunicipality(user.uid, municipalityId);
       await refreshProfile();
-      router.push(`/village/${villageId}`);
+      router.push(`/village/${municipalityId}`);
     } finally {
       setSwitching(false);
     }
@@ -142,18 +142,18 @@ export default function ProfilePage() {
         ) : (
           <ul className="space-y-2">
             {memberships.map((m) => {
-              const v = villagesById[m.villageId];
+              const v = municipalitiesById[m.municipalityId];
               if (!v) return null;
-              const isActive = m.villageId === profile.activeVillageId;
+              const isActive = m.municipalityId === profile.activeMunicipalityId;
               return (
-                <li key={m.villageId} className="flex items-center justify-between">
-                  <Link href={`/village/${m.villageId}`} className="flex-1 min-w-0">
+                <li key={m.municipalityId} className="flex items-center justify-between">
+                  <Link href={`/village/${m.municipalityId}`} className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-gray-900">{v.name}</p>
-                    <p className="text-xs text-gray-400">{v.provincia}</p>
+                    <p className="text-xs text-gray-400">{v.province}</p>
                     {m.profileCompletedAt ? (
                       <span className="text-xs text-emerald-600">Censo completo</span>
                     ) : (
-                      <Link href={`/village/${m.villageId}/censo`} className="text-xs text-amber-600 hover:underline">
+                      <Link href={`/village/${m.municipalityId}/censo`} className="text-xs text-amber-600 hover:underline">
                         Completar censo
                       </Link>
                     )}
@@ -163,7 +163,7 @@ export default function ProfilePage() {
                   ) : (
                     <button
                       type="button"
-                      onClick={() => handleSwitchVillage(m.villageId)}
+                      onClick={() => handleSwitchVillage(m.municipalityId)}
                       disabled={switching}
                       className="text-xs text-blue-600 hover:underline disabled:opacity-50"
                     >
@@ -235,8 +235,8 @@ export default function ProfilePage() {
       {/* Censo per village */}
       {memberships.map((m) => (
         <VillageCensoSection
-          key={m.villageId}
-          villageId={m.villageId}
+          key={m.municipalityId}
+          municipalityId={m.municipalityId}
           userId={user.uid}
         />
       ))}
@@ -263,7 +263,7 @@ export default function ProfilePage() {
                 <Shield size={18} className="text-purple-600" />
                 <div>
                   <p className="text-sm font-medium text-gray-900">Administración global</p>
-                  <p className="text-xs text-gray-500">Crear y editar pueblos</p>
+                  <p className="text-xs text-gray-500">Activar y editar comunidades</p>
                 </div>
               </div>
               <span className="text-gray-400 text-lg">›</span>
@@ -271,12 +271,12 @@ export default function ProfilePage() {
           )}
 
           {adminMemberships.map((m) => {
-            const v = villagesById[m.villageId];
+            const v = municipalitiesById[m.municipalityId];
             if (!v) return null;
             return (
               <Link
-                key={m.villageId}
-                href={`/village/${m.villageId}/admin`}
+                key={m.municipalityId}
+                href={`/village/${m.municipalityId}/admin`}
                 className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 border-t border-gray-100 transition"
               >
                 <div className="flex items-center gap-3">

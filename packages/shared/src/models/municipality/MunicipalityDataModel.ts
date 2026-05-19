@@ -1,9 +1,38 @@
+import { GeoPoint } from 'firebase/firestore'
+import type { VillageProfileForm } from './CensoTypes'
+
+/**
+ * A municipality is the canonical Spanish administrative unit (INE-coded).
+ * It is the *physical* place. When a community of users activates Cultuvilla
+ * for that municipality, the `community` subfield is populated — at that
+ * moment the municipality "becomes" a village in the user-facing sense.
+ *
+ * 1:1 invariant: there is at most one community per municipality, enforced
+ * structurally by storing the community inside the municipality doc.
+ */
+
+export interface VillageCommunity {
+  description: string
+  coverImages: string[]
+  adminUserId: string
+  profileForm: VillageProfileForm | null
+  activatedAt: Date
+}
+
 export interface MunicipalityData {
+  // ── Reference data (INE-seeded, immutable in practice) ─────────────────
   name: string
   province: string
   comunidadAutonoma: string
   codigoINE: string
+  coordinates: GeoPoint | null
   createdAt: Date
+
+  // ── Community overlay ─────────────────────────────────────────────────
+  community: VillageCommunity | null
+  /** Denorm of `community != null` — needed for queries since Firestore
+   * can't index "field exists" cheaply. */
+  communityActive: boolean
 }
 
 export interface MunicipalityDataInput {
@@ -11,11 +40,40 @@ export interface MunicipalityDataInput {
   province: string
   comunidadAutonoma: string
   codigoINE: string
+  coordinates?: GeoPoint | null
 }
 
 export function buildMunicipalityData(input: MunicipalityDataInput): MunicipalityData {
-  return { ...input, createdAt: new Date() }
+  return {
+    name: input.name,
+    province: input.province,
+    comunidadAutonoma: input.comunidadAutonoma,
+    codigoINE: input.codigoINE,
+    coordinates: input.coordinates ?? null,
+    createdAt: new Date(),
+    community: null,
+    communityActive: false,
+  }
 }
+
+export interface ActivateCommunityInput {
+  description: string
+  coverImages?: string[]
+  adminUserId: string
+  coordinates?: GeoPoint | null
+}
+
+export function buildVillageCommunity(input: ActivateCommunityInput): VillageCommunity {
+  return {
+    description: input.description,
+    coverImages: input.coverImages ?? [],
+    adminUserId: input.adminUserId,
+    profileForm: null,
+    activatedAt: new Date(),
+  }
+}
+
+// ── Barrios (subcollection: /municipalities/{id}/barrios/{barrioId}) ────
 
 export interface BarrioData {
   name: string
@@ -31,6 +89,8 @@ export interface BarrioDataInput {
 export function buildBarrioData(input: BarrioDataInput): BarrioData {
   return { ...input, createdAt: new Date() }
 }
+
+// ── Cemeteries (subcollection: /municipalities/{id}/cemeteries/{cemId}) ──
 
 export interface CemeteryData {
   name: string

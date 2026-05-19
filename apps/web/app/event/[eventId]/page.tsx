@@ -48,7 +48,7 @@ export default function EventDetailPage() {
     const uniqueUserIds = Array.from(new Set(allRegistrations.map((r) => r.userId)));
     Promise.all(
       uniqueUserIds.map((uid) =>
-        isVillageMember(event.villageId, uid).then((ok) => (ok ? uid : null)),
+        isVillageMember(event.municipalityId, uid).then((ok) => (ok ? uid : null)),
       ),
     ).then((results) => {
       setMemberOfVillage(new Set(results.filter((x): x is string => x !== null)));
@@ -96,8 +96,8 @@ export default function EventDetailPage() {
   return (
     <div className="pb-6">
       <div className="px-4 pt-4 mb-2">
-        <Link href={`/village/${event.villageId}`} className="flex items-center gap-1 text-blue-600 text-sm">
-          <ArrowLeft size={16} /> {event.villageName}
+        <Link href={`/village/${event.municipalityId}`} className="flex items-center gap-1 text-blue-600 text-sm">
+          <ArrowLeft size={16} /> {event.municipalityName}
         </Link>
       </div>
 

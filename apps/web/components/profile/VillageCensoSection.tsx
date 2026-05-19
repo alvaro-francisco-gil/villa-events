@@ -1,26 +1,27 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { getVillage } from '@cultuvilla/shared/services/villageService';
+import { getMunicipality, getBarrios } from '@cultuvilla/shared/services/municipalityService';
 import { getVillageMember } from '@cultuvilla/shared/services/villageMemberService';
 import { saveProfileAnswers } from '@cultuvilla/shared/services/membershipProfileService';
 import { isCensoComplete, missingRequiredAnswers } from '@cultuvilla/shared/services/censoService';
-import type { VillageData } from '@cultuvilla/shared/models/village';
+import type { MunicipalityData } from '@cultuvilla/shared/models/municipality';
 import type {
   ProfileAnswers,
   ProfileFormField,
-} from '@cultuvilla/shared/models/village/CensoTypes';
+} from '@cultuvilla/shared/models/municipality/CensoTypes';
 import { CensoFormRenderer } from './CensoFormRenderer';
 import { ChevronDown, ChevronUp, CheckCircle, AlertCircle } from 'lucide-react';
 
 interface Props {
-  villageId: string;
+  municipalityId: string;
   userId: string;
 }
 
-export function VillageCensoSection({ villageId, userId }: Props) {
-  const [village, setVillage] = useState<(VillageData & { id: string }) | null>(null);
+export function VillageCensoSection({ municipalityId, userId }: Props) {
+  const [municipality, setMunicipality] = useState<(MunicipalityData & { id: string }) | null>(null);
   const [fields, setFields] = useState<ProfileFormField[]>([]);
+  const [barrios, setBarrios] = useState<string[]>([]);
   const [answers, setAnswers] = useState<ProfileAnswers>({});
   const [savedAnswers, setSavedAnswers] = useState<ProfileAnswers>({});
   const [loading, setLoading] = useState(true);
@@ -31,14 +32,16 @@ export function VillageCensoSection({ villageId, userId }: Props) {
   useEffect(() => {
     let cancelled = false;
     async function load() {
-      const [v, m] = await Promise.all([
-        getVillage(villageId),
-        getVillageMember(villageId, userId),
+      const [v, m, bs] = await Promise.all([
+        getMunicipality(municipalityId),
+        getVillageMember(municipalityId, userId),
+        getBarrios(municipalityId),
       ]);
       if (cancelled) return;
-      setVillage(v);
-      const f = v?.profileForm?.fields ?? [];
+      setMunicipality(v);
+      const f = v?.community?.profileForm?.fields ?? [];
       setFields(f);
+      setBarrios(bs.map((b) => b.name));
       const a = m?.profileAnswers ?? {};
       setAnswers(a);
       setSavedAnswers(a);
@@ -46,7 +49,7 @@ export function VillageCensoSection({ villageId, userId }: Props) {
     }
     load();
     return () => { cancelled = true; };
-  }, [villageId, userId]);
+  }, [municipalityId, userId]);
 
   const dirty = useMemo(
     () => JSON.stringify(answers) !== JSON.stringify(savedAnswers),
@@ -55,14 +58,14 @@ export function VillageCensoSection({ villageId, userId }: Props) {
   const complete = useMemo(() => isCensoComplete(fields, savedAnswers), [fields, savedAnswers]);
   const missing = useMemo(() => missingRequiredAnswers(fields, savedAnswers), [fields, savedAnswers]);
 
-  if (loading || !village) return null;
+  if (loading || !municipality) return null;
   if (fields.length === 0) return null;
 
   async function handleSave() {
     setSaving(true);
     setError('');
     try {
-      await saveProfileAnswers(villageId, userId, fields, answers);
+      await saveProfileAnswers(municipalityId, userId, fields, answers);
       setSavedAnswers(answers);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Error al guardar');
@@ -85,7 +88,7 @@ export function VillageCensoSection({ villageId, userId }: Props) {
           )}
           <div className="min-w-0">
             <p className="text-sm font-semibold text-gray-900 truncate">
-              Tu perfil en {village.name}
+              Tu perfil en {municipality.name}
             </p>
             <p className="text-xs text-gray-500">
               {complete
@@ -105,7 +108,7 @@ export function VillageCensoSection({ villageId, userId }: Props) {
             fields={fields}
             answers={answers}
             onChange={setAnswers}
-            villageBarrios={village.barrios ?? []}
+            barrios={barrios}
             disabled={saving}
           />
           {error && (

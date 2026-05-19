@@ -22,7 +22,7 @@ function mapUserDoc(id: string, data: Record<string, unknown>): UserData & { id:
     biography: (data['biography'] as string) ?? null,
     telephone: (data['telephone'] as string) ?? null,
     photoURL: (data['photoURL'] as string) ?? null,
-    activeVillageId: (data['activeVillageId'] as string) ?? null,
+    activeMunicipalityId: (data['activeMunicipalityId'] as string) ?? null,
     personId: (data['personId'] as string) ?? null,
     createdAt: (data['createdAt'] as Timestamp).toDate(),
   };
@@ -54,7 +54,7 @@ export async function createUserProfile(
     biography: input.biography ?? null,
     telephone: input.telephone ?? null,
     photoURL: input.photoURL ?? null,
-    activeVillageId: input.activeVillageId ?? null,
+    activeMunicipalityId: input.activeMunicipalityId ?? null,
     personId: input.personId ?? null,
     createdAt: serverTimestamp(),
   });
@@ -69,9 +69,9 @@ export async function updateUserProfile(
   await updateDoc(docRef, data as any);
 }
 
-export async function setActiveVillage(
+export async function setActiveMunicipality(
   userId: string,
-  villageId: string | null,
+  municipalityId: string | null,
 ): Promise<void> {
-  await updateDoc(doc(db, 'users', userId), { activeVillageId: villageId });
+  await updateDoc(doc(db, 'users', userId), { activeMunicipalityId: municipalityId });
 }

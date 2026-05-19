@@ -12,11 +12,11 @@ import {
   query,
 } from 'firebase/firestore';
 import { db } from '../firebase';
-import type { VillageMemberData, VillageMemberRole } from '../models/village/VillageMemberDataModel';
-import type { ProfileAnswers } from '../models/village/CensoTypes';
+import type { VillageMemberData, VillageMemberRole } from '../models/municipality/VillageMemberDataModel';
+import type { ProfileAnswers } from '../models/municipality/CensoTypes';
 
-function membersCol(villageId: string) {
-  return collection(db, 'villages', villageId, 'members');
+function membersCol(municipalityId: string) {
+  return collection(db, 'municipalities', municipalityId, 'members');
 }
 
 function mapMemberDoc(
@@ -34,27 +34,27 @@ function mapMemberDoc(
 }
 
 export async function getVillageMember(
-  villageId: string,
+  municipalityId: string,
   userId: string
 ): Promise<(VillageMemberData & { id: string }) | null> {
-  const snap = await getDoc(doc(membersCol(villageId), userId));
+  const snap = await getDoc(doc(membersCol(municipalityId), userId));
   if (!snap.exists()) return null;
   return mapMemberDoc(snap.id, snap.data());
 }
 
 export async function getVillageMembers(
-  villageId: string
+  municipalityId: string
 ): Promise<(VillageMemberData & { id: string })[]> {
-  const snap = await getDocs(membersCol(villageId));
+  const snap = await getDocs(membersCol(municipalityId));
   return snap.docs.map((d) => mapMemberDoc(d.id, d.data()));
 }
 
 export async function addVillageMember(
-  villageId: string,
+  municipalityId: string,
   userId: string,
   role: VillageMemberRole = 'user'
 ): Promise<void> {
-  await setDoc(doc(membersCol(villageId), userId), {
+  await setDoc(doc(membersCol(municipalityId), userId), {
     userId,
     role,
     joinedAt: serverTimestamp(),
@@ -64,31 +64,31 @@ export async function addVillageMember(
 }
 
 export async function removeVillageMember(
-  villageId: string,
+  municipalityId: string,
   userId: string
 ): Promise<void> {
-  await deleteDoc(doc(membersCol(villageId), userId));
+  await deleteDoc(doc(membersCol(municipalityId), userId));
 }
 
 export async function isVillageMember(
-  villageId: string,
+  municipalityId: string,
   userId: string
 ): Promise<boolean> {
-  const snap = await getDoc(doc(membersCol(villageId), userId));
+  const snap = await getDoc(doc(membersCol(municipalityId), userId));
   return snap.exists();
 }
 
 export async function isVillageAdmin(
-  villageId: string,
+  municipalityId: string,
   userId: string
 ): Promise<boolean> {
-  const snap = await getDoc(doc(membersCol(villageId), userId));
+  const snap = await getDoc(doc(membersCol(municipalityId), userId));
   if (!snap.exists()) return false;
   return snap.data()['role'] === 'admin';
 }
 
 export interface UserMembership {
-  villageId: string;
+  municipalityId: string;
   role: VillageMemberRole;
   joinedAt: Date;
   profileCompletedAt: Date | null;
@@ -98,12 +98,12 @@ export async function getUserMemberships(userId: string): Promise<UserMembership
   const q = query(collectionGroup(db, 'members'), where('userId', '==', userId));
   const snap = await getDocs(q);
   return snap.docs
-    .filter((d) => d.ref.parent.parent?.parent.id === 'villages')
+    .filter((d) => d.ref.parent.parent?.parent.id === 'municipalities')
     .map((d) => {
       const data = d.data();
       const completedAtRaw = data['profileCompletedAt'];
       return {
-        villageId: d.ref.parent.parent!.id,
+        municipalityId: d.ref.parent.parent!.id,
         role: data['role'] as VillageMemberRole,
         joinedAt: (data['joinedAt'] as Timestamp).toDate(),
         profileCompletedAt: completedAtRaw ? (completedAtRaw as Timestamp).toDate() : null,

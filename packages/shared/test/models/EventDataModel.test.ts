@@ -12,9 +12,9 @@ describe('buildEventData', () => {
       organizationId: 'org-1',
       organizationName: 'Ayuntamiento',
       createdBy: 'user-1',
-      villageId: 'v1',
-      villageName: 'Test Village',
-      villageCoordinates: new GeoPoint(0, 0),
+      municipalityId: 'v1',
+      municipalityName: 'Test Village',
+      municipalityCoordinates: new GeoPoint(0, 0),
     });
     expect(event.title).toBe('Fiesta del pueblo');
     expect(event.status).toBe('draft');
@@ -37,9 +37,9 @@ describe('buildEventData', () => {
       maxAttendees: 50,
       telephoneRequired: true,
       price: 15,
-      villageId: 'v1',
-      villageName: 'Test Village',
-      villageCoordinates: new GeoPoint(0, 0),
+      municipalityId: 'v1',
+      municipalityName: 'Test Village',
+      municipalityCoordinates: new GeoPoint(0, 0),
     });
     expect(event.maxAttendees).toBe(50);
     expect(event.telephoneRequired).toBe(true);
@@ -47,8 +47,8 @@ describe('buildEventData', () => {
   });
 });
 
-describe('EventDataModel — village denormalization', () => {
-  it('stores villageId, villageName, villageCoverImage, villageCoordinates', () => {
+describe('EventDataModel — municipality denormalization', () => {
+  it('stores municipalityId, name, cover image, and coordinates', () => {
     const coords = new GeoPoint(40.5, -4.0);
     const event = buildEventData({
       title: 't',
@@ -58,18 +58,18 @@ describe('EventDataModel — village denormalization', () => {
       organizationId: 'org1',
       organizationName: 'Org 1',
       createdBy: 'u1',
-      villageId: 'v1',
-      villageName: 'Becerril',
-      villageCoverImage: 'https://example/cover.jpg',
-      villageCoordinates: coords,
+      municipalityId: 'v1',
+      municipalityName: 'Becerril',
+      municipalityCoverImage: 'https://example/cover.jpg',
+      municipalityCoordinates: coords,
     });
-    expect(event.villageId).toBe('v1');
-    expect(event.villageName).toBe('Becerril');
-    expect(event.villageCoverImage).toBe('https://example/cover.jpg');
-    expect(event.villageCoordinates).toBe(coords);
+    expect(event.municipalityId).toBe('v1');
+    expect(event.municipalityName).toBe('Becerril');
+    expect(event.municipalityCoverImage).toBe('https://example/cover.jpg');
+    expect(event.municipalityCoordinates).toBe(coords);
   });
 
-  it('allows villageCoverImage to be null', () => {
+  it('allows municipalityCoverImage to be null', () => {
     const event = buildEventData({
       title: 't',
       description: 'd',
@@ -78,15 +78,15 @@ describe('EventDataModel — village denormalization', () => {
       organizationId: 'org1',
       organizationName: 'Org 1',
       createdBy: 'u1',
-      villageId: 'v1',
-      villageName: 'Becerril',
-      villageCoverImage: null,
-      villageCoordinates: new GeoPoint(0, 0),
+      municipalityId: 'v1',
+      municipalityName: 'Becerril',
+      municipalityCoverImage: null,
+      municipalityCoordinates: new GeoPoint(0, 0),
     });
-    expect(event.villageCoverImage).toBeNull();
+    expect(event.municipalityCoverImage).toBeNull();
   });
 
-  it('defaults villageCoverImage to null when omitted', () => {
+  it('defaults municipalityCoverImage to null when omitted', () => {
     const event = buildEventData({
       title: 't',
       description: 'd',
@@ -95,11 +95,10 @@ describe('EventDataModel — village denormalization', () => {
       organizationId: 'org1',
       organizationName: 'Org 1',
       createdBy: 'u1',
-      villageId: 'v1',
-      villageName: 'Becerril',
-      // villageCoverImage omitted
-      villageCoordinates: new GeoPoint(0, 0),
+      municipalityId: 'v1',
+      municipalityName: 'Becerril',
+      municipalityCoordinates: new GeoPoint(0, 0),
     });
-    expect(event.villageCoverImage).toBeNull();
+    expect(event.municipalityCoverImage).toBeNull();
   });
 });

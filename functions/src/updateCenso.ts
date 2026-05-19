@@ -11,7 +11,7 @@ import {
 const db = admin.firestore();
 
 interface UpdateCensoData {
-  villageId?: string;
+  municipalityId?: string;
   fields?: ProfileFormField[];
 }
 
@@ -20,9 +20,9 @@ interface UpdateCensoResult {
   fieldCount: number;
 }
 
-async function collectUsedValues(villageId: string): Promise<UsedValuesByKey> {
+async function collectUsedValues(municipalityId: string): Promise<UsedValuesByKey> {
   const out: UsedValuesByKey = {};
-  const membersSnap = await db.collection(`villages/${villageId}/members`).get();
+  const membersSnap = await db.collection(`municipalities/${municipalityId}/members`).get();
   for (const m of membersSnap.docs) {
     const answers = (m.data().profileAnswers ?? {}) as Record<string, unknown>;
     for (const [k, v] of Object.entries(answers)) {
@@ -46,15 +46,15 @@ export const updateCenso = onCall<UpdateCensoData, Promise<UpdateCensoResult>>(
     if (!auth) {
       throw new HttpsError('unauthenticated', 'Debes iniciar sesión.');
     }
-    const { villageId, fields } = request.data ?? {};
-    if (!villageId || !Array.isArray(fields)) {
+    const { municipalityId, fields } = request.data ?? {};
+    if (!municipalityId || !Array.isArray(fields)) {
       throw new HttpsError('invalid-argument', 'Faltan parámetros.');
     }
 
     fields.forEach(ensureValidFieldShape);
 
     // Verify the caller is a village admin (or app admin).
-    const memberRef = db.doc(`villages/${villageId}/members/${auth.uid}`);
+    const memberRef = db.doc(`municipalities/${municipalityId}/members/${auth.uid}`);
     const memberSnap = await memberRef.get();
     const isVillageAdmin = memberSnap.exists && memberSnap.data()?.role === 'admin';
     const adminDocRef = db.doc(`admins/${auth.uid}`);
@@ -63,22 +63,23 @@ export const updateCenso = onCall<UpdateCensoData, Promise<UpdateCensoResult>>(
       throw new HttpsError('permission-denied', 'Solo el coordinador puede modificar el censo.');
     }
 
-    const villageRef = db.doc(`villages/${villageId}`);
-    const villageSnap = await villageRef.get();
-    if (!villageSnap.exists) {
+    const municipalityRef = db.doc(`municipalities/${municipalityId}`);
+    const municipalitySnap = await municipalityRef.get();
+    if (!municipalitySnap.exists) {
       throw new HttpsError('not-found', 'El pueblo no existe.');
     }
 
-    const prevForm = (villageSnap.data()?.profileForm ?? null) as
-      | { fields: PrevField[] }
-      | null;
-    const prevFields: PrevField[] = prevForm?.fields ?? [];
+    const community = municipalitySnap.data()?.community as
+      | { profileForm?: { fields?: PrevField[] } | null }
+      | null
+      | undefined;
+    const prevFields: PrevField[] = community?.profileForm?.fields ?? [];
 
-    const used = await collectUsedValues(villageId);
+    const used = await collectUsedValues(municipalityId);
     validateTransition(prevFields, fields, used);
 
-    await villageRef.update({
-      profileForm: {
+    await municipalityRef.update({
+      'community.profileForm': {
         fields,
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
       },

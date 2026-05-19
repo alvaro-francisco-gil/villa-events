@@ -9,7 +9,7 @@ import { acceptInvite } from '@cultuvilla/shared/services/inviteTokenService';
 const PENDING_INVITE_KEY = 'cultuvilla:pendingInvite';
 
 interface PendingInvite {
-  villageId: string;
+  municipalityId: string;
   tokenId: string;
 }
 
@@ -18,10 +18,10 @@ function readPendingInvite(): PendingInvite | null {
   const raw = sessionStorage.getItem(PENDING_INVITE_KEY);
   if (!raw) return null;
   try {
-    // Stored format: "/invite/{tokenId}?v={villageId}"
+    // Stored format: "/invite/{tokenId}?v={municipalityId}"
     const m = raw.match(/^\/invite\/([^?]+)\?v=(.+)$/);
     if (!m) return null;
-    return { tokenId: decodeURIComponent(m[1]), villageId: decodeURIComponent(m[2]) };
+    return { tokenId: decodeURIComponent(m[1]), municipalityId: decodeURIComponent(m[2]) };
   } catch {
     return null;
   }
@@ -69,21 +69,17 @@ export default function CompleteProfilePage() {
       };
 
       if (pendingInvite) {
-        // Atomic: profile creation + village join happen in a single Firestore
-        // transaction inside the Cloud Function. If anything fails, neither
-        // the user doc nor the membership are created.
         const result = await acceptInvite(
-          pendingInvite.villageId,
+          pendingInvite.municipalityId,
           pendingInvite.tokenId,
           profileData,
         );
         sessionStorage.removeItem(PENDING_INVITE_KEY);
         await refreshProfile();
-        router.replace(`/village/${result.villageId}`);
+        router.replace(`/village/${result.municipalityId}`);
         return;
       }
 
-      // No pending invite: standalone profile creation.
       await createUserProfile(user.uid, profileData);
       await refreshProfile();
       router.replace('/');

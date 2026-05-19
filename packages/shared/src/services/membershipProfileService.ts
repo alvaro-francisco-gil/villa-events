@@ -1,21 +1,21 @@
 import { doc, updateDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { db } from '../firebase';
-import type { ProfileAnswers, ProfileFormField } from '../models/village/CensoTypes';
+import type { ProfileAnswers, ProfileFormField } from '../models/municipality/CensoTypes';
 import { isCensoComplete } from './censoService';
 
 /**
- * Saves the user's answers to a village's censo. If all required fields
+ * Saves the user's answers to a municipality's censo. If all required fields
  * are filled, sets profileCompletedAt; otherwise clears it.
  *
  * Only the user themselves should call this (security rules enforce that).
  */
 export async function saveProfileAnswers(
-  villageId: string,
+  municipalityId: string,
   userId: string,
   fields: ProfileFormField[],
   answers: ProfileAnswers,
 ): Promise<void> {
-  const memberRef = doc(db, 'villages', villageId, 'members', userId);
+  const memberRef = doc(db, 'municipalities', municipalityId, 'members', userId);
   const complete = isCensoComplete(fields, answers);
   await updateDoc(memberRef, {
     profileAnswers: answers,
@@ -24,7 +24,7 @@ export async function saveProfileAnswers(
 }
 
 /**
- * Aggregates predefined-field answers across all members of a village,
+ * Aggregates predefined-field answers across all members of a municipality,
  * returning a map of `{ key -> Set<value> }`. Useful as input to schema
  * transition validation. Reading the full members collection is fine for
  * a single-village admin operation; not used in hot paths.

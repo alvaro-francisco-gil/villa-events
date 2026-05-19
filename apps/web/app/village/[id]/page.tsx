@@ -3,11 +3,11 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { getVillage } from '@cultuvilla/shared/services/villageService';
-import { getEventsByVillage } from '@cultuvilla/shared/services/eventService';
-import { getOrganizationsByVillage } from '@cultuvilla/shared/services/organizationService';
+import { getMunicipality } from '@cultuvilla/shared/services/municipalityService';
+import { getEventsByMunicipality } from '@cultuvilla/shared/services/eventService';
+import { getOrganizationsByMunicipality } from '@cultuvilla/shared/services/organizationService';
 import { isVillageMember, getVillageMember } from '@cultuvilla/shared/services/villageMemberService';
-import type { VillageData } from '@cultuvilla/shared/models/village';
+import type { MunicipalityData } from '@cultuvilla/shared/models/municipality';
 import type { EventData } from '@cultuvilla/shared/models/event';
 import type { OrganizationData } from '@cultuvilla/shared/models/organization';
 import { useAuth } from '@/hooks/useAuth';
@@ -16,10 +16,10 @@ import { SkeletonLoader } from '@/components/common/SkeletonLoader';
 
 export default function VillagePage() {
   const params = useParams<{ id: string }>();
-  const villageId = params.id;
+  const municipalityId = params.id;
   const { user } = useAuth();
 
-  const [village, setVillage] = useState<(VillageData & { id: string }) | null>(null);
+  const [municipality, setMunicipality] = useState<(MunicipalityData & { id: string }) | null>(null);
   const [events, setEvents] = useState<(EventData & { id: string })[]>([]);
   const [orgs, setOrgs] = useState<(OrganizationData & { id: string })[]>([]);
   const [isMember, setIsMember] = useState(false);
@@ -27,23 +27,23 @@ export default function VillagePage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!villageId) return;
+    if (!municipalityId) return;
     Promise.all([
-      getVillage(villageId),
-      getEventsByVillage(villageId, 'published'),
-      getOrganizationsByVillage(villageId, 'approved'),
-      user ? isVillageMember(villageId, user.uid) : Promise.resolve(false),
-      user ? getVillageMember(villageId, user.uid) : Promise.resolve(null),
+      getMunicipality(municipalityId),
+      getEventsByMunicipality(municipalityId, 'published'),
+      getOrganizationsByMunicipality(municipalityId, 'approved'),
+      user ? isVillageMember(municipalityId, user.uid) : Promise.resolve(false),
+      user ? getVillageMember(municipalityId, user.uid) : Promise.resolve(null),
     ])
       .then(([v, evs, os, mem, mDoc]) => {
-        setVillage(v);
+        setMunicipality(v);
         setEvents(evs);
         setOrgs(os);
         setIsMember(mem as boolean);
         setMemberDoc(mDoc ? { profileCompletedAt: (mDoc as { profileCompletedAt: Date | null }).profileCompletedAt } : null);
       })
       .finally(() => setLoading(false));
-  }, [villageId, user]);
+  }, [municipalityId, user]);
 
   if (loading) {
     return (
@@ -55,24 +55,25 @@ export default function VillagePage() {
     );
   }
 
-  if (!village) {
+  if (!municipality) {
     return <p className="px-4 py-6 text-gray-500">Pueblo no encontrado.</p>;
   }
 
-  const cover = village.images?.[0] ?? null;
+  const community = municipality.community;
+  const cover = community?.coverImages[0] ?? null;
 
   return (
     <div className="pb-12">
       {cover ? (
-        <img src={cover} alt={village.name} className="w-full h-44 object-cover" />
+        <img src={cover} alt={municipality.name} className="w-full h-44 object-cover" />
       ) : (
         <div className="w-full h-44 bg-gray-100" />
       )}
 
       <div className="px-4 py-6">
-        <h1 className="text-2xl font-bold text-gray-900">{village.name}</h1>
-        <p className="text-sm text-gray-500 mt-1">{village.provincia}</p>
-        {village.description && <p className="text-sm text-gray-700 mt-3">{village.description}</p>}
+        <h1 className="text-2xl font-bold text-gray-900">{municipality.name}</h1>
+        <p className="text-sm text-gray-500 mt-1">{municipality.province}</p>
+        {community?.description && <p className="text-sm text-gray-700 mt-3">{community.description}</p>}
 
         {!isMember && user && (
           <div className="mt-4 p-3 rounded-lg bg-blue-50 text-blue-800 text-sm">
@@ -82,8 +83,8 @@ export default function VillagePage() {
 
         {isMember && memberDoc && !memberDoc.profileCompletedAt && (
           <div className="mt-4 p-3 rounded-lg bg-amber-50 text-amber-800 text-sm">
-            Aún no has completado el censo de {village.name}.{' '}
-            <Link href={`/village/${village.id}/censo`} className="underline font-medium">
+            Aún no has completado el censo de {municipality.name}.{' '}
+            <Link href={`/village/${municipality.id}/censo`} className="underline font-medium">
               Completar ahora
             </Link>
           </div>
@@ -91,7 +92,7 @@ export default function VillagePage() {
 
         <h2 className="text-sm font-semibold text-gray-700 mt-8 mb-3">Próximos eventos</h2>
         {events.length === 0 ? (
-          <p className="text-gray-500 text-sm">No hay eventos próximos en {village.name}.</p>
+          <p className="text-gray-500 text-sm">No hay eventos próximos en {municipality.name}.</p>
         ) : (
           <div className="space-y-3">
             {events.map((e) => <FeedCard key={e.id} event={e} />)}

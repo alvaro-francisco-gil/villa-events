@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   buildInviteTokenData,
   isTokenExpired,
-} from '../../src/models/village/InviteTokenDataModel';
+} from '../../src/models/municipality/InviteTokenDataModel';
 
 describe('buildInviteTokenData', () => {
   it('defaults expiresAt to null, usageCount to 0, createdAt to Date', () => {

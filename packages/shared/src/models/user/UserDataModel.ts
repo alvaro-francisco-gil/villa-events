@@ -5,7 +5,7 @@ export interface UserData {
   biography: string | null
   telephone: string | null
   photoURL: string | null
-  activeVillageId: string | null
+  activeMunicipalityId: string | null
   personId: string | null
   createdAt: Date
 }
@@ -17,7 +17,7 @@ export interface UserDataInput {
   biography?: string | null
   telephone?: string | null
   photoURL?: string | null
-  activeVillageId?: string | null
+  activeMunicipalityId?: string | null
   personId?: string | null
   createdAt?: Date
 }
@@ -30,7 +30,7 @@ export function buildUserData(input: UserDataInput): UserData {
     biography: input.biography ?? null,
     telephone: input.telephone ?? null,
     photoURL: input.photoURL ?? null,
-    activeVillageId: input.activeVillageId ?? null,
+    activeMunicipalityId: input.activeMunicipalityId ?? null,
     personId: input.personId ?? null,
     createdAt: input.createdAt ?? new Date(),
   }

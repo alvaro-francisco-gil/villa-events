@@ -5,20 +5,23 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
 import { isAppAdmin } from '@cultuvilla/shared/services/adminService';
-import { getVillages } from '@cultuvilla/shared/services/villageService';
-import type { VillageData } from '@cultuvilla/shared/models/village';
+import { getActiveCommunities } from '@cultuvilla/shared/services/municipalityService';
+import type { MunicipalityData } from '@cultuvilla/shared/models/municipality';
 import { TopBar } from '@/components/common/TopBar';
 import { VillageForm } from '@/components/admin/VillageForm';
 import { Pencil, Settings, Plus, MapPin, Briefcase } from 'lucide-react';
 
 type Status = 'checking' | 'allowed';
-type FormMode = { kind: 'closed' } | { kind: 'create' } | { kind: 'edit'; village: VillageData & { id: string } };
+type FormMode =
+  | { kind: 'closed' }
+  | { kind: 'create' }
+  | { kind: 'edit'; municipality: MunicipalityData & { id: string } };
 
 export default function AdminPage() {
   const { user, loading, refreshProfile } = useAuth();
   const router = useRouter();
   const [status, setStatus] = useState<Status>('checking');
-  const [villages, setVillages] = useState<(VillageData & { id: string })[]>([]);
+  const [communities, setCommunities] = useState<(MunicipalityData & { id: string })[]>([]);
   const [form, setForm] = useState<FormMode>({ kind: 'closed' });
 
   useEffect(() => {
@@ -35,11 +38,11 @@ export default function AdminPage() {
 
   useEffect(() => {
     if (status !== 'allowed') return;
-    getVillages().then(setVillages);
+    getActiveCommunities().then(setCommunities);
   }, [status]);
 
-  const reloadVillages = async () => {
-    setVillages(await getVillages());
+  const reloadCommunities = async () => {
+    setCommunities(await getActiveCommunities());
   };
 
   if (loading || status === 'checking') {
@@ -84,13 +87,13 @@ export default function AdminPage() {
 
         <section className="space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="font-semibold">Pueblos</h2>
+            <h2 className="font-semibold">Pueblos con comunidad activa</h2>
             {form.kind === 'closed' ? (
               <button
                 onClick={() => setForm({ kind: 'create' })}
                 className="text-sm text-blue-600 flex items-center gap-1"
               >
-                <Plus size={14} /> Nuevo pueblo
+                <Plus size={14} /> Activar pueblo
               </button>
             ) : (
               <button onClick={() => setForm({ kind: 'closed' })} className="text-sm text-gray-500">
@@ -105,7 +108,7 @@ export default function AdminPage() {
               currentUserId={user!.uid}
               onSubmitted={async () => {
                 setForm({ kind: 'closed' });
-                await reloadVillages();
+                await reloadCommunities();
                 await refreshProfile();
               }}
               onCancel={() => setForm({ kind: 'closed' })}
@@ -116,57 +119,60 @@ export default function AdminPage() {
             <VillageForm
               mode="edit"
               currentUserId={user!.uid}
-              initial={form.village}
+              initial={form.municipality}
               onSubmitted={async () => {
                 setForm({ kind: 'closed' });
-                await reloadVillages();
+                await reloadCommunities();
               }}
               onCancel={() => setForm({ kind: 'closed' })}
             />
           )}
 
-          {villages.length === 0 ? (
-            <p className="text-sm text-gray-500">Aún no hay pueblos.</p>
+          {communities.length === 0 ? (
+            <p className="text-sm text-gray-500">Aún no hay pueblos con comunidad activa.</p>
           ) : (
             <ul className="space-y-2">
-              {villages.map((v) => (
-                <li
-                  key={v.id}
-                  className="bg-white rounded-lg p-3 border border-gray-200 flex items-center gap-3"
-                >
-                  {v.images[0] ? (
-                    <img src={v.images[0]} alt="" className="w-12 h-12 rounded-lg object-cover" />
-                  ) : (
-                    <div className="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
-                      {v.name[0]}
+              {communities.map((m) => {
+                const cover = m.community?.coverImages[0];
+                return (
+                  <li
+                    key={m.id}
+                    className="bg-white rounded-lg p-3 border border-gray-200 flex items-center gap-3"
+                  >
+                    {cover ? (
+                      <img src={cover} alt="" className="w-12 h-12 rounded-lg object-cover" />
+                    ) : (
+                      <div className="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
+                        {m.name[0]}
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <Link href={`/village/${m.id}`} className="block">
+                        <p className="font-medium truncate">{m.name}</p>
+                        <p className="text-xs text-gray-500 truncate">
+                          {m.province}, {m.comunidadAutonoma}
+                        </p>
+                      </Link>
                     </div>
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <Link href={`/village/${v.id}`} className="block">
-                      <p className="font-medium truncate">{v.name}</p>
-                      <p className="text-xs text-gray-500 truncate">
-                        {v.provincia}, {v.comunidadAutonoma}
-                      </p>
-                    </Link>
-                  </div>
-                  <div className="flex gap-1">
-                    <button
-                      onClick={() => setForm({ kind: 'edit', village: v })}
-                      className="p-2 text-gray-500 hover:bg-gray-100 rounded-lg"
-                      title="Editar pueblo"
-                    >
-                      <Pencil size={15} />
-                    </button>
-                    <Link
-                      href={`/village/${v.id}/admin`}
-                      className="p-2 text-gray-500 hover:bg-gray-100 rounded-lg"
-                      title="Gestionar (invitaciones, organizaciones)"
-                    >
-                      <Settings size={15} />
-                    </Link>
-                  </div>
-                </li>
-              ))}
+                    <div className="flex gap-1">
+                      <button
+                        onClick={() => setForm({ kind: 'edit', municipality: m })}
+                        className="p-2 text-gray-500 hover:bg-gray-100 rounded-lg"
+                        title="Editar comunidad"
+                      >
+                        <Pencil size={15} />
+                      </button>
+                      <Link
+                        href={`/village/${m.id}/admin`}
+                        className="p-2 text-gray-500 hover:bg-gray-100 rounded-lg"
+                        title="Gestionar (invitaciones, organizaciones)"
+                      >
+                        <Settings size={15} />
+                      </Link>
+                    </div>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </section>

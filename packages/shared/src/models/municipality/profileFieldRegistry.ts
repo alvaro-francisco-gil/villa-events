@@ -5,7 +5,7 @@ export interface PredefinedFieldDefinition {
   defaultLabel: string;
   type: FieldType;
   options?: string[];
-  optionsFromVillageBarrios?: boolean;
+  optionsFromBarrios?: boolean;
   description?: string;
 }
 
@@ -14,7 +14,7 @@ export const PREDEFINED_FIELDS: Record<string, PredefinedFieldDefinition> = {
     key: 'barrio',
     defaultLabel: 'Barrio',
     type: 'select',
-    optionsFromVillageBarrios: true,
+    optionsFromBarrios: true,
     description: 'Barrio donde vive el miembro',
   },
   residencyType: {

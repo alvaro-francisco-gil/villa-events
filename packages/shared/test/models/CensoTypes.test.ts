@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { slugifyFieldKey } from '../../src/models/village/CensoTypes';
+import { slugifyFieldKey } from '../../src/models/municipality/CensoTypes';
 
 describe('slugifyFieldKey', () => {
   it('lowercases and replaces spaces with underscores', () => {

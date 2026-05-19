@@ -32,7 +32,7 @@ function mapOrgDoc(d: { id: string; data: () => Record<string, unknown> }): Orga
     description: (data['description'] as string | null) ?? null,
     type: data['type'] as OrganizationData['type'],
     status: data['status'] as OrganizationStatus,
-    villageId: data['villageId'] as string,
+    municipalityId: data['municipalityId'] as string,
     requestedBy: data['requestedBy'] as string,
     approvedBy: (data['approvedBy'] as string | null) ?? null,
     createdAt: (data['createdAt'] as Timestamp).toDate(),
@@ -46,13 +46,13 @@ export async function getOrganization(orgId: string): Promise<(OrganizationData 
   return mapOrgDoc(snap as Parameters<typeof mapOrgDoc>[0]);
 }
 
-export async function getOrganizationsByVillage(
-  villageId: string,
+export async function getOrganizationsByMunicipality(
+  municipalityId: string,
   status?: OrganizationStatus
 ): Promise<(OrganizationData & { id: string })[]> {
   const constraints = status
-    ? [where('villageId', '==', villageId), where('status', '==', status), orderBy('name', 'asc')]
-    : [where('villageId', '==', villageId), orderBy('name', 'asc')];
+    ? [where('municipalityId', '==', municipalityId), where('status', '==', status), orderBy('name', 'asc')]
+    : [where('municipalityId', '==', municipalityId), orderBy('name', 'asc')];
   const q = query(orgsCol(), ...constraints);
   const snap = await getDocs(q);
   return snap.docs.map((d) => mapOrgDoc(d as Parameters<typeof mapOrgDoc>[0]));
@@ -65,7 +65,7 @@ export async function requestOrganization(input: OrganizationDataInput): Promise
     description: input.description ?? null,
     type: input.type,
     status: 'pending',
-    villageId: input.villageId,
+    municipalityId: input.municipalityId,
     requestedBy: input.requestedBy,
     approvedBy: null,
     createdAt: serverTimestamp(),
@@ -92,7 +92,7 @@ export async function rejectOrganization(orgId: string): Promise<void> {
 
 export async function updateOrganization(
   orgId: string,
-  data: Partial<Omit<OrganizationData, 'createdAt' | 'requestedBy' | 'villageId'>>
+  data: Partial<Omit<OrganizationData, 'createdAt' | 'requestedBy' | 'municipalityId'>>
 ): Promise<void> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   await updateDoc(doc(orgsCol(), orgId), data as any);

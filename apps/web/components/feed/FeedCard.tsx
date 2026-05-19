@@ -21,15 +21,15 @@ export function FeedCard({ event }: FeedCardProps) {
     >
       {event.imageURL ? (
         <img src={event.imageURL} alt={event.title} className="w-full h-40 object-cover" />
-      ) : event.villageCoverImage ? (
-        <img src={event.villageCoverImage} alt={event.villageName} className="w-full h-40 object-cover opacity-60" />
+      ) : event.municipalityCoverImage ? (
+        <img src={event.municipalityCoverImage} alt={event.municipalityName} className="w-full h-40 object-cover opacity-60" />
       ) : (
         <div className="w-full h-40 bg-gray-100" />
       )}
       <div className="p-4">
         <div className="flex items-center gap-1 text-xs text-gray-500 mb-1">
           <MapPin size={12} />
-          <span>{event.villageName}</span>
+          <span>{event.municipalityName}</span>
         </div>
         <h3 className="text-base font-semibold text-gray-900 line-clamp-1">{event.title}</h3>
         <div className="flex items-center gap-1 text-xs text-gray-500 mt-2">

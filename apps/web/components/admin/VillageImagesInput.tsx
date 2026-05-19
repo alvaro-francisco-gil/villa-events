@@ -3,19 +3,19 @@
 import { useRef, useState } from 'react';
 import { ImagePlus, Star, X } from 'lucide-react';
 import {
-  uploadVillageImage,
+  uploadMunicipalityImage,
   deleteImageByURL,
 } from '@cultuvilla/shared/services/imageService';
 
 interface VillageImagesInputProps {
-  villageId: string;
+  municipalityId: string;
   value: string[];
   onChange: (urls: string[]) => void;
   max?: number;
 }
 
 export function VillageImagesInput({
-  villageId,
+  municipalityId,
   value,
   onChange,
   max = 5,
@@ -39,7 +39,7 @@ export function VillageImagesInput({
     try {
       const newUrls: string[] = [];
       for (let i = 0; i < slots; i++) {
-        const url = await uploadVillageImage(villageId, files[i]);
+        const url = await uploadMunicipalityImage(municipalityId, files[i]);
         newUrls.push(url);
       }
       onChange([...value, ...newUrls]);

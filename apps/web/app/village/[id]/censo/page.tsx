@@ -4,12 +4,12 @@ import { use, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
-import { getVillage } from '@cultuvilla/shared/services/villageService';
+import { getMunicipality, getBarrios } from '@cultuvilla/shared/services/municipalityService';
 import { getVillageMember } from '@cultuvilla/shared/services/villageMemberService';
 import { saveProfileAnswers } from '@cultuvilla/shared/services/membershipProfileService';
 import { isCensoComplete, missingRequiredAnswers } from '@cultuvilla/shared/services/censoService';
-import type { VillageData } from '@cultuvilla/shared/models/village';
-import type { ProfileAnswers, ProfileFormField } from '@cultuvilla/shared/models/village/CensoTypes';
+import type { MunicipalityData } from '@cultuvilla/shared/models/municipality';
+import type { ProfileAnswers, ProfileFormField } from '@cultuvilla/shared/models/municipality/CensoTypes';
 import { CensoFormRenderer } from '@/components/profile/CensoFormRenderer';
 import { ArrowLeft } from 'lucide-react';
 
@@ -18,14 +18,15 @@ interface PageProps {
 }
 
 export default function VillageCensoPage({ params }: PageProps) {
-  const { id: villageId } = use(params);
+  const { id: municipalityId } = use(params);
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const returnTo = searchParams.get('return');
 
-  const [village, setVillage] = useState<(VillageData & { id: string }) | null>(null);
+  const [municipality, setMunicipality] = useState<(MunicipalityData & { id: string }) | null>(null);
   const [fields, setFields] = useState<ProfileFormField[]>([]);
+  const [barrios, setBarrios] = useState<string[]>([]);
   const [answers, setAnswers] = useState<ProfileAnswers>({});
   const [savedAnswers, setSavedAnswers] = useState<ProfileAnswers>({});
   const [loading, setLoading] = useState(true);
@@ -40,13 +41,15 @@ export default function VillageCensoPage({ params }: PageProps) {
     if (!user) return;
     let cancelled = false;
     async function load() {
-      const [v, m] = await Promise.all([
-        getVillage(villageId),
-        getVillageMember(villageId, user!.uid),
+      const [v, m, bs] = await Promise.all([
+        getMunicipality(municipalityId),
+        getVillageMember(municipalityId, user!.uid),
+        getBarrios(municipalityId),
       ]);
       if (cancelled) return;
-      setVillage(v);
-      setFields(v?.profileForm?.fields ?? []);
+      setMunicipality(v);
+      setFields(v?.community?.profileForm?.fields ?? []);
+      setBarrios(bs.map((b) => b.name));
       const a = m?.profileAnswers ?? {};
       setAnswers(a);
       setSavedAnswers(a);
@@ -54,7 +57,7 @@ export default function VillageCensoPage({ params }: PageProps) {
     }
     load();
     return () => { cancelled = true; };
-  }, [villageId, user]);
+  }, [municipalityId, user]);
 
   const dirty = useMemo(
     () => JSON.stringify(answers) !== JSON.stringify(savedAnswers),
@@ -64,13 +67,13 @@ export default function VillageCensoPage({ params }: PageProps) {
   const missing = useMemo(() => missingRequiredAnswers(fields, answers), [fields, answers]);
 
   if (authLoading || loading || !user) return <div className="p-8 text-center text-gray-500">Cargando…</div>;
-  if (!village) return <div className="p-8 text-center text-gray-500">Pueblo no encontrado.</div>;
+  if (!municipality) return <div className="p-8 text-center text-gray-500">Pueblo no encontrado.</div>;
 
   async function handleSave() {
     setSaving(true);
     setError('');
     try {
-      await saveProfileAnswers(villageId, user!.uid, fields, answers);
+      await saveProfileAnswers(municipalityId, user!.uid, fields, answers);
       setSavedAnswers(answers);
       if (returnTo && missingRequiredAnswers(fields, answers).length === 0) {
         router.push(returnTo);
@@ -82,7 +85,7 @@ export default function VillageCensoPage({ params }: PageProps) {
     }
   }
 
-  const back = returnTo ?? `/village/${villageId}`;
+  const back = returnTo ?? `/village/${municipalityId}`;
 
   return (
     <div className="min-h-screen px-4 py-6">
@@ -92,7 +95,7 @@ export default function VillageCensoPage({ params }: PageProps) {
           Volver
         </Link>
 
-        <h1 className="text-2xl font-bold mt-4">Censo de {village.name}</h1>
+        <h1 className="text-2xl font-bold mt-4">Censo de {municipality.name}</h1>
         <p className="text-sm text-gray-600 mt-1">
           Responde a estas preguntas para poder inscribirte a los eventos del pueblo.
         </p>
@@ -107,7 +110,7 @@ export default function VillageCensoPage({ params }: PageProps) {
               fields={fields}
               answers={answers}
               onChange={setAnswers}
-              villageBarrios={village.barrios ?? []}
+              barrios={barrios}
               disabled={saving}
             />
           </div>

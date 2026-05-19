@@ -5,8 +5,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { acceptInvite, validateInviteToken } from '@cultuvilla/shared/services/inviteTokenService';
 import { isVillageMember } from '@cultuvilla/shared/services/villageMemberService';
-import { getVillage } from '@cultuvilla/shared/services/villageService';
-import type { VillageData } from '@cultuvilla/shared/models/village';
+import { getMunicipality } from '@cultuvilla/shared/services/municipalityService';
+import type { MunicipalityData } from '@cultuvilla/shared/models/municipality';
 import { useAuth } from '@/hooks/useAuth';
 import { CheckCircle, XCircle, Loader, MapPin } from 'lucide-react';
 
@@ -21,17 +21,17 @@ const PENDING_INVITE_KEY = 'cultuvilla:pendingInvite';
 export default function InvitePage({ params }: InvitePageProps) {
   const { token } = use(params);
   const searchParams = useSearchParams();
-  const villageId = searchParams.get('v') ?? '';
+  const municipalityId = searchParams.get('v') ?? '';
   const { user, loading: authLoading, refreshProfile } = useAuth();
   const router = useRouter();
 
   const [state, setState] = useState<State>('loading');
-  const [village, setVillage] = useState<(VillageData & { id: string }) | null>(null);
+  const [municipality, setMunicipality] = useState<(MunicipalityData & { id: string }) | null>(null);
   const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
     if (authLoading) return;
-    if (!villageId) {
+    if (!municipalityId) {
       setState('invalid');
       return;
     }
@@ -39,10 +39,10 @@ export default function InvitePage({ params }: InvitePageProps) {
     async function validate() {
       try {
         const [valid, v] = await Promise.all([
-          validateInviteToken(villageId, token),
-          getVillage(villageId),
+          validateInviteToken(municipalityId, token),
+          getMunicipality(municipalityId),
         ]);
-        setVillage(v);
+        setMunicipality(v);
 
         if (!valid) {
           setState('invalid');
@@ -50,39 +50,32 @@ export default function InvitePage({ params }: InvitePageProps) {
         }
 
         if (!user) {
-          // Persist intent so the auth flow can return here once done.
           if (typeof window !== 'undefined') {
             sessionStorage.setItem(
               PENDING_INVITE_KEY,
-              `/invite/${token}?v=${villageId}`,
+              `/invite/${token}?v=${municipalityId}`,
             );
           }
           setState('unauthenticated');
           return;
         }
 
-        // Quick check to give immediate "already member" feedback (avoids
-        // a function call when not needed). The Cloud Function is also
-        // idempotent, so this is purely UX.
-        const alreadyMember = await isVillageMember(villageId, user.uid);
+        const alreadyMember = await isVillageMember(municipalityId, user.uid);
         if (alreadyMember) {
           setState('already-member');
           return;
         }
 
-        // Auto-join via Cloud Function (server-side validates the token and
-        // performs all writes atomically).
         setState('joining');
-        const result = await acceptInvite(villageId, token);
+        const result = await acceptInvite(municipalityId, token);
         await refreshProfile();
 
-        // Clear pending invite once consumed.
         if (typeof window !== 'undefined') {
           sessionStorage.removeItem(PENDING_INVITE_KEY);
         }
 
         setState(result.alreadyMember ? 'already-member' : 'joined');
-        setTimeout(() => router.push(`/village/${villageId}`), 1500);
+        setTimeout(() => router.push(`/village/${municipalityId}`), 1500);
       } catch (e) {
         setErrorMsg(e instanceof Error ? e.message : 'Error desconocido');
         setState('error');
@@ -90,7 +83,7 @@ export default function InvitePage({ params }: InvitePageProps) {
     }
 
     validate();
-  }, [authLoading, user, villageId, token, router, refreshProfile]);
+  }, [authLoading, user, municipalityId, token, router, refreshProfile]);
 
   if (state === 'loading' || authLoading) {
     return (
@@ -105,16 +98,16 @@ export default function InvitePage({ params }: InvitePageProps) {
     return (
       <div className="min-h-screen px-4 py-8">
         <div className="max-w-md mx-auto">
-          <VillageHeader village={village} />
+          <VillageHeader municipality={municipality} />
           <div className="mt-6 text-center">
             <h1 className="text-xl font-bold text-gray-900">
-              Te han invitado a {village?.name ?? 'este pueblo'}
+              Te han invitado a {municipality?.name ?? 'este pueblo'}
             </h1>
             <p className="text-gray-600 text-sm mt-2">
               Inicia sesión o crea una cuenta para unirte.
             </p>
             <Link
-              href={`/login?redirect=/invite/${token}?v=${villageId}`}
+              href={`/login?redirect=/invite/${token}?v=${municipalityId}`}
               className="inline-block mt-4 bg-blue-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-blue-700 transition"
             >
               Iniciar sesión
@@ -140,12 +133,12 @@ export default function InvitePage({ params }: InvitePageProps) {
     return (
       <div className="min-h-screen px-4 py-8">
         <div className="max-w-md mx-auto">
-          <VillageHeader village={village} />
+          <VillageHeader municipality={municipality} />
           <div className="mt-6 text-center">
             <CheckCircle size={36} className="text-green-500 mx-auto mb-2" />
             <h1 className="text-xl font-bold text-gray-900">Ya eres miembro</h1>
-            <p className="text-gray-600 text-sm mt-1">Ya perteneces a {village?.name ?? 'este pueblo'}.</p>
-            <Link href={`/village/${villageId}`} className="inline-block mt-4 bg-blue-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-blue-700 transition">
+            <p className="text-gray-600 text-sm mt-1">Ya perteneces a {municipality?.name ?? 'este pueblo'}.</p>
+            <Link href={`/village/${municipalityId}`} className="inline-block mt-4 bg-blue-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-blue-700 transition">
               Ir al pueblo
             </Link>
           </div>
@@ -158,11 +151,11 @@ export default function InvitePage({ params }: InvitePageProps) {
     return (
       <div className="min-h-screen px-4 py-8">
         <div className="max-w-md mx-auto">
-          <VillageHeader village={village} />
+          <VillageHeader municipality={municipality} />
           <div className="mt-6 text-center">
             <CheckCircle size={36} className="text-green-500 mx-auto mb-2" />
             <h1 className="text-xl font-bold text-gray-900">¡Bienvenido!</h1>
-            <p className="text-gray-600 text-sm mt-1">Te has unido a {village?.name ?? 'el pueblo'} correctamente.</p>
+            <p className="text-gray-600 text-sm mt-1">Te has unido a {municipality?.name ?? 'el pueblo'} correctamente.</p>
             <p className="text-xs text-gray-400 mt-1">Redirigiendo...</p>
           </div>
         </div>
@@ -189,8 +182,8 @@ export default function InvitePage({ params }: InvitePageProps) {
   );
 }
 
-function VillageHeader({ village }: { village: (VillageData & { id: string }) | null }) {
-  if (!village) {
+function VillageHeader({ municipality }: { municipality: (MunicipalityData & { id: string }) | null }) {
+  if (!municipality) {
     return (
       <div className="w-full h-44 bg-gradient-to-br from-blue-100 to-blue-200 rounded-2xl flex items-center justify-center">
         <Loader size={28} className="animate-spin text-blue-400" />
@@ -198,18 +191,20 @@ function VillageHeader({ village }: { village: (VillageData & { id: string }) | 
     );
   }
 
+  const coverImages = municipality.community?.coverImages ?? [];
+
   return (
     <div>
-      {village.images.length > 0 ? (
+      {coverImages.length > 0 ? (
         <div className="space-y-2">
           <img
-            src={village.images[0]}
-            alt={village.name}
+            src={coverImages[0]}
+            alt={municipality.name}
             className="w-full h-48 object-cover rounded-2xl"
           />
-          {village.images.length > 1 && (
+          {coverImages.length > 1 && (
             <div className="grid grid-cols-4 gap-2">
-              {village.images.slice(1, 5).map((url) => (
+              {coverImages.slice(1, 5).map((url) => (
                 <img
                   key={url}
                   src={url}
@@ -222,17 +217,17 @@ function VillageHeader({ village }: { village: (VillageData & { id: string }) | 
         </div>
       ) : (
         <div className="w-full h-44 bg-gradient-to-br from-blue-100 to-blue-200 rounded-2xl flex items-center justify-center">
-          <span className="text-blue-500 text-5xl font-bold">{village.name[0]}</span>
+          <span className="text-blue-500 text-5xl font-bold">{municipality.name[0]}</span>
         </div>
       )}
 
       <div className="mt-4 flex items-center gap-1 text-sm text-gray-500">
         <MapPin size={14} />
-        <span>{village.provincia}, {village.comunidadAutonoma}</span>
+        <span>{municipality.province}, {municipality.comunidadAutonoma}</span>
       </div>
 
-      {village.description && (
-        <p className="mt-2 text-sm text-gray-600 leading-relaxed">{village.description}</p>
+      {municipality.community?.description && (
+        <p className="mt-2 text-sm text-gray-600 leading-relaxed">{municipality.community.description}</p>
       )}
     </div>
   );

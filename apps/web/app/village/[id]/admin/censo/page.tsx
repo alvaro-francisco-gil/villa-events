@@ -9,7 +9,7 @@ import { useIsAppAdmin } from '@/hooks/useIsAppAdmin';
 import { getVillageMembers } from '@cultuvilla/shared/services/villageMemberService';
 import { updateCensoSchema } from '@cultuvilla/shared/services/censoService';
 import { collectUsedValues } from '@cultuvilla/shared/services/membershipProfileService';
-import type { ProfileFormField } from '@cultuvilla/shared/models/village/CensoTypes';
+import type { ProfileFormField } from '@cultuvilla/shared/models/municipality/CensoTypes';
 import { CensoFieldList } from '@/components/admin/CensoFieldList';
 import { AddCensoFieldDialog } from '@/components/admin/AddCensoFieldDialog';
 import { ArrowLeft, Plus, Save } from 'lucide-react';
@@ -19,9 +19,9 @@ interface CensoAdminPageProps {
 }
 
 export default function CensoAdminPage({ params }: CensoAdminPageProps) {
-  const { id: villageId } = use(params);
+  const { id: municipalityId } = use(params);
   const { user } = useAuth();
-  const { village, isAdmin, loading: villageLoading } = useVillage();
+  const { municipality, isAdmin, loading: villageLoading } = useVillage();
   const { isAppAdmin, loading: appAdminLoading } = useIsAppAdmin();
   const router = useRouter();
   const canManage = isAdmin || isAppAdmin;
@@ -38,14 +38,14 @@ export default function CensoAdminPage({ params }: CensoAdminPageProps) {
   useEffect(() => {
     if (villageLoading || appAdminLoading) return;
     if (!user) return;
-    if (!canManage) router.push(`/village/${villageId}`);
-  }, [user, canManage, villageLoading, appAdminLoading, router, villageId]);
+    if (!canManage) router.push(`/village/${municipalityId}`);
+  }, [user, canManage, villageLoading, appAdminLoading, router, municipalityId]);
 
   useEffect(() => {
-    if (!canManage || !village) return;
-    const currentForm = village.profileForm?.fields ?? [];
+    if (!canManage || !municipality) return;
+    const currentForm = municipality.community?.profileForm?.fields ?? [];
     async function load() {
-      const members = await getVillageMembers(villageId);
+      const members = await getVillageMembers(municipalityId);
       setMemberCount(members.length);
       const used = collectUsedValues(members);
       const locked = new Set(
@@ -58,12 +58,12 @@ export default function CensoAdminPage({ params }: CensoAdminPageProps) {
       setLoading(false);
     }
     load();
-  }, [villageId, canManage, village]);
+  }, [municipalityId, canManage, municipality]);
 
   const existingKeys = useMemo(() => fields.map((f) => f.key), [fields]);
   const dirty = useMemo(
-    () => JSON.stringify(fields) !== JSON.stringify(village?.profileForm?.fields ?? []),
-    [fields, village],
+    () => JSON.stringify(fields) !== JSON.stringify(municipality?.community?.profileForm?.fields ?? []),
+    [fields, municipality],
   );
 
   async function handleSave() {
@@ -71,7 +71,7 @@ export default function CensoAdminPage({ params }: CensoAdminPageProps) {
     setError('');
     setSuccess(false);
     try {
-      await updateCensoSchema(villageId, fields);
+      await updateCensoSchema(municipalityId, fields);
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
     } catch (e) {
@@ -90,7 +90,7 @@ export default function CensoAdminPage({ params }: CensoAdminPageProps) {
     <div className="min-h-screen px-4 py-6">
       <div className="max-w-2xl mx-auto">
         <Link
-          href={`/village/${villageId}/admin`}
+          href={`/village/${municipalityId}/admin`}
           className="inline-flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900"
         >
           <ArrowLeft size={16} />

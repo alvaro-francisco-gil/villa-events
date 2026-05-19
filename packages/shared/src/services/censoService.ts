@@ -1,7 +1,7 @@
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '../firebase';
-import type { ProfileFormField, ProfileAnswers } from '../models/village/CensoTypes';
-import { isPredefinedFieldKey } from '../models/village/profileFieldRegistry';
+import type { ProfileFormField, ProfileAnswers } from '../models/municipality/CensoTypes';
+import { isPredefinedFieldKey } from '../models/municipality/profileFieldRegistry';
 
 export interface SchemaTransitionViolation {
   code:
@@ -120,12 +120,12 @@ export function isCensoComplete(
  * server-side against current member answers and writes atomically.
  */
 export async function updateCensoSchema(
-  villageId: string,
+  municipalityId: string,
   fields: ProfileFormField[],
 ): Promise<void> {
-  const fn = httpsCallable<{ villageId: string; fields: ProfileFormField[] }, { ok: true }>(
+  const fn = httpsCallable<{ municipalityId: string; fields: ProfileFormField[] }, { ok: true }>(
     functions,
     'updateCenso',
   );
-  await fn({ villageId, fields });
+  await fn({ municipalityId, fields });
 }

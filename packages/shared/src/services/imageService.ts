@@ -15,10 +15,10 @@ function generateImageId(filename: string): string {
   return `${stamp}-${rand}${ext}`;
 }
 
-export async function uploadVillageImage(villageId: string, file: File): Promise<string> {
+export async function uploadMunicipalityImage(municipalityId: string, file: File): Promise<string> {
   assertImage(file);
   const imageId = generateImageId(file.name);
-  const storageRef = ref(storage, `villages/${villageId}/images/${imageId}`);
+  const storageRef = ref(storage, `municipalities/${municipalityId}/images/${imageId}`);
   await uploadBytes(storageRef, file, { contentType: file.type });
   return getDownloadURL(storageRef);
 }

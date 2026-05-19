@@ -1,7 +1,6 @@
 import {
   collection,
   doc,
-  getDoc,
   getDocs,
   setDoc,
   updateDoc,
@@ -31,7 +30,7 @@ function mapNotificationDoc(
     title: data['title'] as string,
     body: data['body'] as string,
     eventId: (data['eventId'] as string | null) ?? null,
-    villageId: (data['villageId'] as string | null) ?? null,
+    municipalityId: (data['municipalityId'] as string | null) ?? null,
     read: (data['read'] as boolean) ?? false,
     createdAt: (data['createdAt'] as Timestamp).toDate(),
   };
@@ -66,7 +65,7 @@ export async function createNotification(
     title: input.title,
     body: input.body,
     eventId: input.eventId ?? null,
-    villageId: input.villageId ?? null,
+    municipalityId: input.municipalityId ?? null,
     read: input.read ?? false,
     createdAt: serverTimestamp(),
   });

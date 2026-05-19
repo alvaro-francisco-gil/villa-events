@@ -64,12 +64,12 @@ export function haversineKm(a: GeoPoint, b: GeoPoint): number {
   return EARTH_RADIUS_KM * c;
 }
 
-export function filterByDistanceKm<T extends { villageCoordinates: GeoPoint | null }>(
+export function filterByDistanceKm<T extends { municipalityCoordinates: GeoPoint | null }>(
   events: T[],
   reference: GeoPoint,
   maxKm: number,
 ): T[] {
   return events.filter(
-    (e) => e.villageCoordinates !== null && haversineKm(reference, e.villageCoordinates) <= maxKm,
+    (e) => e.municipalityCoordinates !== null && haversineKm(reference, e.municipalityCoordinates) <= maxKm,
   );
 }

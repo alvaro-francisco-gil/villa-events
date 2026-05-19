@@ -4,43 +4,41 @@ import * as admin from 'firebase-admin';
 const db = admin.firestore();
 
 /**
- * When a village's name, first image, or coordinates change, propagate to
- * all events with that villageId so the feed always renders fresh values.
+ * When a municipality's name, community cover images, or coordinates change,
+ * propagate to all events with that municipalityId so the feed always renders
+ * fresh values.
  */
 export const syncVillageDenormalization = onDocumentUpdated(
-  { document: 'villages/{villageId}', region: 'us-central1' },
+  { document: 'municipalities/{municipalityId}', region: 'us-central1' },
   async (event) => {
     const before = event.data?.before.data() ?? {};
     const after = event.data?.after.data() ?? {};
-    const villageId = event.params.villageId;
+    const municipalityId = event.params.municipalityId;
 
     const nameChanged = before['name'] !== after['name'];
-    const imagesChanged =
-      JSON.stringify(before['images'] ?? []) !== JSON.stringify(after['images'] ?? []);
     const coordsChanged =
       JSON.stringify(before['coordinates'] ?? null) !==
       JSON.stringify(after['coordinates'] ?? null);
 
-    if (!nameChanged && !imagesChanged && !coordsChanged) return;
+    const beforeCover = pickCover(before['community']);
+    const afterCover = pickCover(after['community']);
+    const coverChanged = beforeCover !== afterCover;
+
+    if (!nameChanged && !coverChanged && !coordsChanged) return;
 
     const eventsSnap = await db
       .collection('events')
-      .where('villageId', '==', villageId)
+      .where('municipalityId', '==', municipalityId)
       .get();
 
     if (eventsSnap.empty) return;
 
-    const cover = Array.isArray(after['images']) && after['images'].length > 0
-      ? (after['images'][0] as string)
-      : null;
-
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const update: Record<string, any> = {};
-    if (nameChanged) update['villageName'] = after['name'];
-    if (imagesChanged) update['villageCoverImage'] = cover;
-    if (coordsChanged) update['villageCoordinates'] = after['coordinates'];
+    if (nameChanged) update['municipalityName'] = after['name'];
+    if (coverChanged) update['municipalityCoverImage'] = afterCover;
+    if (coordsChanged) update['municipalityCoordinates'] = after['coordinates'];
 
-    // Firestore batch limit is 500; chunk if needed.
     const docs = eventsSnap.docs;
     for (let i = 0; i < docs.length; i += 500) {
       const batch = db.batch();
@@ -49,3 +47,12 @@ export const syncVillageDenormalization = onDocumentUpdated(
     }
   },
 );
+
+function pickCover(community: unknown): string | null {
+  if (!community || typeof community !== 'object') return null;
+  const c = community as { coverImages?: unknown };
+  if (Array.isArray(c.coverImages) && c.coverImages.length > 0 && typeof c.coverImages[0] === 'string') {
+    return c.coverImages[0] as string;
+  }
+  return null;
+}

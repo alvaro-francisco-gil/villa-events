@@ -2,15 +2,15 @@ import { describe, it, expect } from 'vitest';
 import { buildOrganizationData } from '../../src/models/organization/OrganizationDataModel';
 
 describe('OrganizationDataModel', () => {
-  it('builds with villageId, defaults status pending and decision fields null', () => {
+  it('builds with municipalityId, defaults status pending and decision fields null', () => {
     const o = buildOrganizationData({
       name: 'Peña X',
       type: 'peña',
       requestedBy: 'u1',
-      villageId: 'v1',
+      municipalityId: 'v1',
     });
     expect(o.name).toBe('Peña X');
-    expect(o.villageId).toBe('v1');
+    expect(o.municipalityId).toBe('v1');
     expect(o.status).toBe('pending');
     expect(o.approvedBy).toBeNull();
     expect(o.decidedAt).toBeNull();
@@ -22,7 +22,7 @@ describe('OrganizationDataModel', () => {
       name: 'A',
       type: 'asociación',
       requestedBy: 'u1',
-      villageId: 'v1',
+      municipalityId: 'v1',
       status: 'approved',
       approvedBy: 'admin1',
       decidedAt: t,

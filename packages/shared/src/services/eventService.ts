@@ -51,10 +51,10 @@ export function mapEventDoc(
     createdBy: data['createdBy'] as string,
     createdAt: (data['createdAt'] as Timestamp).toDate(),
     updatedAt: (data['updatedAt'] as Timestamp).toDate(),
-    villageId: data['villageId'] as string,
-    villageName: data['villageName'] as string,
-    villageCoverImage: (data['villageCoverImage'] as string | null) ?? null,
-    villageCoordinates: (data['villageCoordinates'] as GeoPoint | null) ?? null,
+    municipalityId: data['municipalityId'] as string,
+    municipalityName: data['municipalityName'] as string,
+    municipalityCoverImage: (data['municipalityCoverImage'] as string | null) ?? null,
+    municipalityCoordinates: (data['municipalityCoordinates'] as GeoPoint | null) ?? null,
   };
 }
 
@@ -64,13 +64,13 @@ export async function getEvent(eventId: string): Promise<(EventData & { id: stri
   return mapEventDoc(snap as Parameters<typeof mapEventDoc>[0]);
 }
 
-export async function getEventsByVillage(
-  villageId: string,
+export async function getEventsByMunicipality(
+  municipalityId: string,
   status?: EventStatus
 ): Promise<(EventData & { id: string })[]> {
   const constraints = status
-    ? [where('villageId', '==', villageId), where('status', '==', status), orderBy('startDate', 'asc')]
-    : [where('villageId', '==', villageId), orderBy('startDate', 'asc')];
+    ? [where('municipalityId', '==', municipalityId), where('status', '==', status), orderBy('startDate', 'asc')]
+    : [where('municipalityId', '==', municipalityId), orderBy('startDate', 'asc')];
   const q = query(eventsCol(), ...constraints);
   const snap = await getDocs(q);
   return snap.docs.map((d) => mapEventDoc(d as Parameters<typeof mapEventDoc>[0]));
@@ -106,17 +106,17 @@ export async function createEvent(input: EventDataInput): Promise<string> {
     createdBy: input.createdBy,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
-    villageId: input.villageId,
-    villageName: input.villageName,
-    villageCoverImage: input.villageCoverImage ?? null,
-    villageCoordinates: input.villageCoordinates,
+    municipalityId: input.municipalityId,
+    municipalityName: input.municipalityName,
+    municipalityCoverImage: input.municipalityCoverImage ?? null,
+    municipalityCoordinates: input.municipalityCoordinates,
   });
   return newRef.id;
 }
 
 export async function updateEvent(
   eventId: string,
-  data: Partial<Omit<EventData, 'createdAt' | 'createdBy' | 'villageId'>>
+  data: Partial<Omit<EventData, 'createdAt' | 'createdBy' | 'municipalityId'>>
 ): Promise<void> {
   const updates: Record<string, unknown> = { ...data, updatedAt: serverTimestamp() };
   if (data.startDate instanceof Date) {

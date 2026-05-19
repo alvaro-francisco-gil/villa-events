@@ -1,28 +1,24 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { GeoPoint } from '@cultuvilla/shared/firebase';
 import {
-  createVillage,
-  generateVillageId,
-  updateVillage,
-} from '@cultuvilla/shared/services/villageService';
-import { setActiveVillage } from '@cultuvilla/shared/services/userService';
+  getMunicipalities,
+  activateCommunity,
+  updateCommunity,
+  updateMunicipality,
+} from '@cultuvilla/shared/services/municipalityService';
+import { setActiveMunicipality } from '@cultuvilla/shared/services/userService';
 import {
-  COUNTRIES,
-  COMUNIDADES_AUTONOMAS,
-  PROVINCIAS_BY_COMUNIDAD,
   VillageFormSchema,
-  type ComunidadAutonoma,
-  type VillageData,
+  type MunicipalityData,
   type VillageFormInput,
   type VillageFormValues,
-} from '@cultuvilla/shared/models/village';
+} from '@cultuvilla/shared/models/municipality';
 import { UserPicker } from './UserPicker';
 import { LocationPicker } from './LocationPicker';
-import { BarriosInput } from './BarriosInput';
 import { VillageImagesInput } from './VillageImagesInput';
 
 interface LocationValue {
@@ -34,11 +30,21 @@ interface LocationValue {
 interface VillageFormProps {
   mode: 'create' | 'edit';
   currentUserId: string;
-  initial?: VillageData & { id: string };
+  initial?: MunicipalityData & { id: string };
   onSubmitted: () => void;
   onCancel?: () => void;
 }
 
+/**
+ * Activate or edit a community on a municipality. In create mode the admin
+ * picks an existing (already-seeded) municipality and provides the
+ * community-specific bits (description, cover images, admin user, and
+ * optionally coordinates if the municipality doesn't have them yet).
+ *
+ * In edit mode the community fields and the municipality's coordinates can
+ * be updated; the underlying reference data (name/province/INE) is not
+ * editable here — that lives in the municipalities admin page.
+ */
 export function VillageForm({
   mode,
   currentUserId,
@@ -46,14 +52,13 @@ export function VillageForm({
   onSubmitted,
   onCancel,
 }: VillageFormProps) {
-  // Stable village id: existing one in edit mode, freshly generated in create mode.
-  const [villageId] = useState(() => initial?.id ?? generateVillageId());
+  const [allMunicipalities, setAllMunicipalities] = useState<(MunicipalityData & { id: string })[]>([]);
 
-  const initialLocation: LocationValue | null = initial
+  const initialLocation: LocationValue | null = initial?.coordinates
     ? {
         lat: initial.coordinates.latitude,
         lng: initial.coordinates.longitude,
-        displayName: `${initial.provincia}, ${initial.comunidadAutonoma}`,
+        displayName: `${initial.province}, ${initial.comunidadAutonoma}`,
       }
     : null;
 
@@ -67,50 +72,65 @@ export function VillageForm({
   } = useForm<VillageFormInput, unknown, VillageFormValues>({
     resolver: zodResolver(VillageFormSchema),
     defaultValues: {
-      name: initial?.name ?? '',
-      description: initial?.description ?? '',
-      country: initial?.country ?? COUNTRIES[0].name,
-      comunidadAutonoma: (initial?.comunidadAutonoma as ComunidadAutonoma | undefined) ?? undefined,
-      provincia: initial?.provincia ?? '',
+      municipalityId: initial?.id ?? '',
+      description: initial?.community?.description ?? '',
+      adminUserId: initial?.community?.adminUserId ?? currentUserId,
+      coverImages: initial?.community?.coverImages ?? [],
       location: initialLocation,
-      barrios: initial?.barrios ?? [],
-      images: initial?.images ?? [],
-      adminUserId: initial?.adminUserId ?? currentUserId,
     },
   });
 
-  const comunidadAutonoma = watch('comunidadAutonoma') as ComunidadAutonoma | undefined;
-  const provincia = watch('provincia');
+  const municipalityId = watch('municipalityId');
   const location = watch('location') as LocationValue | null;
-  const barrios = watch('barrios') as string[];
-  const images = watch('images') as string[];
+  const coverImages = watch('coverImages') as string[];
   const adminUserId = watch('adminUserId');
 
-  const provinciaOptions = comunidadAutonoma ? PROVINCIAS_BY_COMUNIDAD[comunidadAutonoma] : [];
+  useEffect(() => {
+    if (mode !== 'create') return;
+    getMunicipalities().then(setAllMunicipalities);
+  }, [mode]);
+
+  const selectableMunicipalities = useMemo(
+    () => allMunicipalities.filter((m) => !m.communityActive),
+    [allMunicipalities],
+  );
+
+  const selectedMunicipality = useMemo(
+    () => allMunicipalities.find((m) => m.id === municipalityId) ?? initial ?? null,
+    [allMunicipalities, municipalityId, initial],
+  );
 
   const submit = handleSubmit(async (data) => {
-    // Validation guarantees data.location is non-null.
-    const loc = data.location!;
-    const payload = {
-      name: data.name,
-      description: data.description,
-      country: data.country,
-      comunidadAutonoma: data.comunidadAutonoma,
-      provincia: data.provincia,
-      coordinates: new GeoPoint(loc.lat, loc.lng),
-      barrios: data.barrios,
-      images: data.images,
-      adminUserId: data.adminUserId,
-    };
+    const needsCoords = !selectedMunicipality?.coordinates;
+    if (needsCoords && !data.location) {
+      setError('location', { message: 'Selecciona la ubicación' });
+      return;
+    }
+
+    const coordinates = data.location
+      ? new GeoPoint(data.location.lat, data.location.lng)
+      : selectedMunicipality?.coordinates ?? null;
 
     try {
       if (mode === 'create') {
-        await createVillage(payload, villageId);
+        await activateCommunity(data.municipalityId, {
+          description: data.description,
+          coverImages: data.coverImages,
+          adminUserId: data.adminUserId,
+          coordinates,
+        });
         if (data.adminUserId === currentUserId) {
-          await setActiveVillage(currentUserId, villageId);
+          await setActiveMunicipality(currentUserId, data.municipalityId);
         }
       } else {
-        await updateVillage(villageId, payload);
+        await updateCommunity(data.municipalityId, {
+          description: data.description,
+          coverImages: data.coverImages,
+          adminUserId: data.adminUserId,
+        });
+        if (data.location) {
+          await updateMunicipality(data.municipalityId, { coordinates });
+        }
       }
       onSubmitted();
     } catch (e) {
@@ -123,89 +143,80 @@ export function VillageForm({
 
   return (
     <form onSubmit={submit} className="bg-white border border-gray-200 rounded-lg p-4 space-y-4" noValidate>
-      <div>
-        <input className={inputClass} placeholder="Nombre del pueblo" {...register('name')} />
-        {errors.name && <p className="text-xs text-red-600 mt-1">{errors.name.message}</p>}
-      </div>
-      <div>
-        <textarea className={inputClass} placeholder="Descripción" rows={2} {...register('description')} />
-        {errors.description && <p className="text-xs text-red-600 mt-1">{errors.description.message}</p>}
-      </div>
+      {mode === 'create' ? (
+        <div>
+          <label className="block text-xs text-gray-500 mb-1">Municipio</label>
+          <select
+            className={inputClass}
+            value={municipalityId}
+            onChange={(e) => setValue('municipalityId', e.target.value, { shouldValidate: true })}
+          >
+            <option value="">Selecciona…</option>
+            {selectableMunicipalities.map((m) => (
+              <option key={m.id} value={m.id}>
+                {m.name} ({m.province})
+              </option>
+            ))}
+          </select>
+          {selectableMunicipalities.length === 0 && allMunicipalities.length > 0 && (
+            <p className="mt-1 text-xs text-amber-600">
+              Todos los municipios disponibles ya tienen comunidad activa.
+            </p>
+          )}
+          {errors.municipalityId && (
+            <p className="text-xs text-red-600 mt-1">{errors.municipalityId.message}</p>
+          )}
+        </div>
+      ) : (
+        initial && (
+          <div className="text-sm text-gray-600">
+            <p className="font-medium text-gray-900">{initial.name}</p>
+            <p className="text-xs text-gray-500">{initial.province}, {initial.comunidadAutonoma}</p>
+            <input type="hidden" {...register('municipalityId')} />
+          </div>
+        )
+      )}
 
       <div>
-        <label className="block text-xs text-gray-500 mb-1">País</label>
-        <select className={inputClass} {...register('country')}>
-          {COUNTRIES.map((c) => (
-            <option key={c.code} value={c.name}>
-              {c.name}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div>
-        <label className="block text-xs text-gray-500 mb-1">Comunidad Autónoma</label>
-        <select
+        <textarea
           className={inputClass}
-          value={comunidadAutonoma ?? ''}
-          onChange={(e) => {
-            setValue('comunidadAutonoma', e.target.value as ComunidadAutonoma, { shouldValidate: true });
-            setValue('provincia', '', { shouldValidate: true });
-          }}
-        >
-          <option value="">Selecciona...</option>
-          {COMUNIDADES_AUTONOMAS.map((c) => (
-            <option key={c} value={c}>
-              {c}
-            </option>
-          ))}
-        </select>
-        {errors.comunidadAutonoma && (
-          <p className="text-xs text-red-600 mt-1">{errors.comunidadAutonoma.message}</p>
+          placeholder="Descripción del pueblo"
+          rows={2}
+          {...register('description')}
+        />
+        {errors.description && (
+          <p className="text-xs text-red-600 mt-1">{errors.description.message}</p>
         )}
       </div>
 
       <div>
-        <label className="block text-xs text-gray-500 mb-1">Provincia</label>
-        <select
-          className={inputClass}
-          value={provincia ?? ''}
-          onChange={(e) => setValue('provincia', e.target.value, { shouldValidate: true })}
-          disabled={!comunidadAutonoma}
-        >
-          <option value="">Selecciona...</option>
-          {provinciaOptions.map((p) => (
-            <option key={p} value={p}>
-              {p}
-            </option>
-          ))}
-        </select>
-        {errors.provincia && <p className="text-xs text-red-600 mt-1">{errors.provincia.message}</p>}
+        <LocationPicker
+          value={location}
+          onChange={(v) => setValue('location', v, { shouldValidate: true })}
+        />
+        {errors.location && (
+          <p className="text-xs text-red-600 mt-1">{errors.location.message}</p>
+        )}
       </div>
 
-      <LocationPicker
-        value={location}
-        onChange={(v) => setValue('location', v, { shouldValidate: true })}
-      />
-      {errors.location && <p className="text-xs text-red-600 mt-1">{errors.location.message}</p>}
+      {municipalityId && (
+        <VillageImagesInput
+          municipalityId={municipalityId}
+          value={coverImages}
+          onChange={(v) => setValue('coverImages', v, { shouldValidate: true })}
+        />
+      )}
 
-      <BarriosInput
-        value={barrios}
-        onChange={(v) => setValue('barrios', v, { shouldValidate: true })}
-      />
-
-      <VillageImagesInput
-        villageId={villageId}
-        value={images}
-        onChange={(v) => setValue('images', v, { shouldValidate: true })}
-      />
-
-      <UserPicker
-        value={adminUserId}
-        onChange={(v) => setValue('adminUserId', v, { shouldValidate: true })}
-        label="Coordinador del pueblo"
-      />
-      {errors.adminUserId && <p className="text-xs text-red-600 mt-1">{errors.adminUserId.message}</p>}
+      <div>
+        <UserPicker
+          value={adminUserId}
+          onChange={(v) => setValue('adminUserId', v, { shouldValidate: true })}
+          label="Coordinador del pueblo"
+        />
+        {errors.adminUserId && (
+          <p className="text-xs text-red-600 mt-1">{errors.adminUserId.message}</p>
+        )}
+      </div>
 
       {errors.root && <p className="text-sm text-red-600">{errors.root.message}</p>}
 
@@ -224,7 +235,7 @@ export function VillageForm({
           disabled={isSubmitting}
           className="flex-1 bg-blue-600 text-white py-2 rounded-lg font-medium disabled:opacity-50"
         >
-          {isSubmitting ? 'Guardando...' : mode === 'create' ? 'Crear pueblo' : 'Guardar cambios'}
+          {isSubmitting ? 'Guardando...' : mode === 'create' ? 'Activar comunidad' : 'Guardar cambios'}
         </button>
       </div>
     </form>

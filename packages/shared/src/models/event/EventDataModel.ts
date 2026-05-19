@@ -19,11 +19,11 @@ export interface EventData {
   createdBy: string;
   createdAt: Date;
   updatedAt: Date;
-  // Village context (denormalized for feed rendering).
-  villageId: string;
-  villageName: string;
-  villageCoverImage: string | null;
-  villageCoordinates: GeoPoint | null;
+  // Municipality context (denormalized for feed rendering).
+  municipalityId: string;
+  municipalityName: string;
+  municipalityCoverImage: string | null;
+  municipalityCoordinates: GeoPoint | null;
 }
 
 export interface EventDataInput {
@@ -42,10 +42,10 @@ export interface EventDataInput {
   createdBy: string;
   createdAt?: Date;
   updatedAt?: Date;
-  villageId: string;
-  villageName: string;
-  villageCoverImage?: string | null;
-  villageCoordinates: GeoPoint | null;
+  municipalityId: string;
+  municipalityName: string;
+  municipalityCoverImage?: string | null;
+  municipalityCoordinates: GeoPoint | null;
 }
 
 export function buildEventData(input: EventDataInput): EventData {
@@ -66,10 +66,10 @@ export function buildEventData(input: EventDataInput): EventData {
     createdBy: input.createdBy,
     createdAt: input.createdAt ?? now,
     updatedAt: input.updatedAt ?? now,
-    villageId: input.villageId,
-    villageName: input.villageName,
-    villageCoverImage: input.villageCoverImage ?? null,
-    villageCoordinates: input.villageCoordinates,
+    municipalityId: input.municipalityId,
+    municipalityName: input.municipalityName,
+    municipalityCoverImage: input.municipalityCoverImage ?? null,
+    municipalityCoordinates: input.municipalityCoordinates,
   };
 }
 

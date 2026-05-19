@@ -12,7 +12,7 @@
       "collectionGroup": "events",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "villageId", "order": "ASCENDING" },
+        { "fieldPath": "municipalityId", "order": "ASCENDING" },
         { "fieldPath": "startDate", "order": "ASCENDING" }
       ]
     },
@@ -28,7 +28,7 @@
       "collectionGroup": "events",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "villageId", "order": "ASCENDING" },
+        { "fieldPath": "municipalityId", "order": "ASCENDING" },
         { "fieldPath": "status", "order": "ASCENDING" },
         { "fieldPath": "startDate", "order": "ASCENDING" }
       ]
@@ -37,7 +37,7 @@
       "collectionGroup": "organizations",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "villageId", "order": "ASCENDING" },
+        { "fieldPath": "municipalityId", "order": "ASCENDING" },
         { "fieldPath": "name", "order": "ASCENDING" }
       ]
     },
@@ -45,8 +45,16 @@
       "collectionGroup": "organizations",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "villageId", "order": "ASCENDING" },
+        { "fieldPath": "municipalityId", "order": "ASCENDING" },
         { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "name", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "municipalities",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "communityActive", "order": "ASCENDING" },
         { "fieldPath": "name", "order": "ASCENDING" }
       ]
     },

@@ -1,3 +1,7 @@
+/**
+ * An invite token grants entry to a municipality's community.
+ * Stored at /municipalities/{municipalityId}/inviteTokens/{tokenId}.
+ */
 export interface InviteTokenData {
   createdAt: Date;
   expiresAt: Date | null;

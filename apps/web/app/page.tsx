@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { GeoPoint } from '@cultuvilla/shared/firebase';
 import { getUpcomingFeed, filterByDistanceKm } from '@cultuvilla/shared/services/feedService';
-import { getVillage } from '@cultuvilla/shared/services/villageService';
+import { getMunicipality } from '@cultuvilla/shared/services/municipalityService';
 import type { EventData } from '@cultuvilla/shared/models/event';
 import { useAuth } from '@/hooks/useAuth';
 import { FeedCard } from '@/components/feed/FeedCard';
@@ -33,11 +33,11 @@ export default function HomePage() {
 
   // Resolve reference point for "Cerca de mí"
   useEffect(() => {
-    if (!user || !profile?.activeVillageId) return;
-    getVillage(profile.activeVillageId).then((v) => {
+    if (!user || !profile?.activeMunicipalityId) return;
+    getMunicipality(profile.activeMunicipalityId).then((v) => {
       if (v?.coordinates) setReferencePoint(v.coordinates);
     });
-  }, [user, profile?.activeVillageId]);
+  }, [user, profile?.activeMunicipalityId]);
 
   // Load the feed
   useEffect(() => {

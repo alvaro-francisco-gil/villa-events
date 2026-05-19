@@ -2,6 +2,10 @@ import type { ProfileAnswers } from './CensoTypes';
 
 export type VillageMemberRole = 'admin' | 'user';
 
+/**
+ * A member of the community living on a municipality.
+ * Stored at /municipalities/{municipalityId}/members/{userId}.
+ */
 export interface VillageMemberData {
   role: VillageMemberRole;
   joinedAt: Date;

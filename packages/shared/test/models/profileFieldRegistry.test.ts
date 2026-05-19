@@ -4,7 +4,7 @@ import {
   isPredefinedFieldKey,
   getPredefinedField,
   listPredefinedFields,
-} from '../../src/models/village/profileFieldRegistry';
+} from '../../src/models/municipality/profileFieldRegistry';
 
 describe('isPredefinedFieldKey', () => {
   it('recognizes built-in keys', () => {

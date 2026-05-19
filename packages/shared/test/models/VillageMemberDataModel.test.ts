@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildVillageMemberData } from '../../src/models/village/VillageMemberDataModel';
+import { buildVillageMemberData } from '../../src/models/municipality/VillageMemberDataModel';
 
 describe('buildVillageMemberData', () => {
   it('defaults role to user, empty profileAnswers, profileCompletedAt null', () => {

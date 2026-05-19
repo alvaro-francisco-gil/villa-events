@@ -12,11 +12,11 @@ import {
 } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
 import { db, functions } from '../firebase';
-import type { InviteTokenData } from '../models/village/InviteTokenDataModel';
-import { isTokenExpired } from '../models/village/InviteTokenDataModel';
+import type { InviteTokenData } from '../models/municipality/InviteTokenDataModel';
+import { isTokenExpired } from '../models/municipality/InviteTokenDataModel';
 
-function tokensCol(villageId: string) {
-  return collection(db, 'villages', villageId, 'inviteTokens');
+function tokensCol(municipalityId: string) {
+  return collection(db, 'municipalities', municipalityId, 'inviteTokens');
 }
 
 function mapTokenDoc(d: { id: string; data: () => Record<string, unknown> }): InviteTokenData & { id: string } {
@@ -31,10 +31,10 @@ function mapTokenDoc(d: { id: string; data: () => Record<string, unknown> }): In
 }
 
 export async function createInviteToken(
-  villageId: string,
+  municipalityId: string,
   expiresAt?: Date | null
 ): Promise<string> {
-  const newRef = doc(tokensCol(villageId));
+  const newRef = doc(tokensCol(municipalityId));
   await setDoc(newRef, {
     createdAt: serverTimestamp(),
     expiresAt: expiresAt ? Timestamp.fromDate(expiresAt) : null,
@@ -44,36 +44,36 @@ export async function createInviteToken(
 }
 
 export async function validateInviteToken(
-  villageId: string,
+  municipalityId: string,
   tokenId: string
 ): Promise<boolean> {
-  const snap = await getDoc(doc(tokensCol(villageId), tokenId));
+  const snap = await getDoc(doc(tokensCol(municipalityId), tokenId));
   if (!snap.exists()) return false;
   const token = mapTokenDoc(snap as Parameters<typeof mapTokenDoc>[0]);
   return !isTokenExpired(token);
 }
 
 export async function consumeInviteToken(
-  villageId: string,
+  municipalityId: string,
   tokenId: string
 ): Promise<void> {
-  await updateDoc(doc(tokensCol(villageId), tokenId), {
+  await updateDoc(doc(tokensCol(municipalityId), tokenId), {
     usageCount: increment(1),
   });
 }
 
 export async function getInviteTokens(
-  villageId: string
+  municipalityId: string
 ): Promise<(InviteTokenData & { id: string })[]> {
-  const snap = await getDocs(tokensCol(villageId));
+  const snap = await getDocs(tokensCol(municipalityId));
   return snap.docs.map((d) => mapTokenDoc(d as Parameters<typeof mapTokenDoc>[0]));
 }
 
 export async function deleteInviteToken(
-  villageId: string,
+  municipalityId: string,
   tokenId: string
 ): Promise<void> {
-  await deleteDoc(doc(tokensCol(villageId), tokenId));
+  await deleteDoc(doc(tokensCol(municipalityId), tokenId));
 }
 
 export interface AcceptInviteProfile {
@@ -84,19 +84,19 @@ export interface AcceptInviteProfile {
 }
 
 export interface AcceptInviteResult {
-  villageId: string;
+  municipalityId: string;
   alreadyMember: boolean;
   profileCreated: boolean;
 }
 
 export async function acceptInvite(
-  villageId: string,
+  municipalityId: string,
   tokenId: string,
   profile?: AcceptInviteProfile,
 ): Promise<AcceptInviteResult> {
   const callable = httpsCallable<
     {
-      villageId: string;
+      municipalityId: string;
       tokenId: string;
       profile?: {
         displayName: string;
@@ -110,7 +110,7 @@ export async function acceptInvite(
 
   const payload = profile
     ? {
-        villageId,
+        municipalityId,
         tokenId,
         profile: {
           displayName: profile.displayName,
@@ -119,7 +119,7 @@ export async function acceptInvite(
           photoURL: profile.photoURL ?? null,
         },
       }
-    : { villageId, tokenId };
+    : { municipalityId, tokenId };
 
   const result = await callable(payload);
   return result.data;

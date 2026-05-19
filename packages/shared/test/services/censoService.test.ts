@@ -7,7 +7,7 @@ import {
   isCensoComplete,
   validateSchemaTransition,
 } from '../../src/services/censoService';
-import type { ProfileFormField } from '../../src/models/village/CensoTypes';
+import type { ProfileFormField } from '../../src/models/municipality/CensoTypes';
 
 describe('missingRequiredAnswers', () => {
   const fields: ProfileFormField[] = [
