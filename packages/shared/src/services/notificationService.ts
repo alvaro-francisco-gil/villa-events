@@ -13,11 +13,11 @@ import {
   Timestamp,
   getCountFromServer,
 } from 'firebase/firestore';
-import { db } from '../firebase';
+import { getDb } from '../firebase';
 import type { NotificationData, NotificationDataInput } from '../models/notification/NotificationDataModel';
 
 function notificationsCol(userId: string) {
-  return collection(db, 'users', userId, 'notifications');
+  return collection(getDb(), 'users', userId, 'notifications');
 }
 
 function mapNotificationDoc(
@@ -83,7 +83,7 @@ export async function markAllAsRead(userId: string): Promise<void> {
   const q = query(notificationsCol(userId), where('read', '==', false));
   const snap = await getDocs(q);
   if (snap.empty) return;
-  const batch = writeBatch(db);
+  const batch = writeBatch(getDb());
   snap.docs.forEach((d) => {
     batch.update(d.ref, { read: true });
   });

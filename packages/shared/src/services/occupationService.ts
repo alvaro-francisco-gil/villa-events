@@ -2,14 +2,14 @@ import {
   collection, doc, getDocs, addDoc, updateDoc, deleteDoc,
   query, where, orderBy, serverTimestamp, Timestamp,
 } from 'firebase/firestore'
-import { db } from '../firebase'
+import { getDb } from '../firebase'
 import type { OccupationData, OccupationDataInput, OccupationProposalData, OccupationProposalStatus } from '../models/occupation'
 
 function occupationsCol() {
-  return collection(db, 'occupations')
+  return collection(getDb(), 'occupations')
 }
 function proposalsCol() {
-  return collection(db, 'occupationProposals')
+  return collection(getDb(), 'occupationProposals')
 }
 
 export async function getOccupations(): Promise<(OccupationData & { id: string })[]> {

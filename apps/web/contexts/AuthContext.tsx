@@ -1,5 +1,6 @@
 'use client';
 
+import '@/lib/firebaseInit';
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
 import {
   onAuthStateChanged,
@@ -10,7 +11,9 @@ import {
   GoogleAuthProvider,
   type User,
 } from 'firebase/auth';
-import { auth } from '@cultuvilla/shared/firebase';
+import { getAuth } from '@cultuvilla/shared/firebase';
+
+const auth = getAuth();
 import { getUserProfile } from '@cultuvilla/shared/services/userService';
 import type { UserData } from '@cultuvilla/shared/models/user';
 

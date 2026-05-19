@@ -2,7 +2,7 @@ import {
   collection, doc, getDoc, getDocs, addDoc, setDoc, updateDoc, deleteDoc,
   query, orderBy, where, serverTimestamp, Timestamp, GeoPoint, writeBatch,
 } from 'firebase/firestore'
-import { db } from '../firebase'
+import { getDb } from '../firebase'
 import type {
   MunicipalityData,
   MunicipalityDataInput,
@@ -18,13 +18,13 @@ import type { VillageProfileForm, ProfileFormField } from '../models/municipalit
 // ── Collection refs ──────────────────────────────────────────────────────
 
 function municipalitiesCol() {
-  return collection(db, 'municipalities')
+  return collection(getDb(), 'municipalities')
 }
 function barriosCol(municipalityId: string) {
-  return collection(db, 'municipalities', municipalityId, 'barrios')
+  return collection(getDb(), 'municipalities', municipalityId, 'barrios')
 }
 function cemeteriesCol(municipalityId: string) {
-  return collection(db, 'municipalities', municipalityId, 'cemeteries')
+  return collection(getDb(), 'municipalities', municipalityId, 'cemeteries')
 }
 
 // ── Mappers ──────────────────────────────────────────────────────────────
@@ -129,7 +129,7 @@ export async function activateCommunity(
   input: ActivateCommunityInput,
 ): Promise<void> {
   const munRef = doc(municipalitiesCol(), municipalityId)
-  const memberRef = doc(db, 'municipalities', municipalityId, 'members', input.adminUserId)
+  const memberRef = doc(getDb(), 'municipalities', municipalityId, 'members', input.adminUserId)
 
   const community = {
     description: input.description,
@@ -139,7 +139,7 @@ export async function activateCommunity(
     activatedAt: serverTimestamp(),
   }
 
-  const batch = writeBatch(db)
+  const batch = writeBatch(getDb())
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const munUpdate: Record<string, any> = {
     community,

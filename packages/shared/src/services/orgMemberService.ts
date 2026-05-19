@@ -8,11 +8,11 @@ import {
   serverTimestamp,
   Timestamp,
 } from 'firebase/firestore';
-import { db } from '../firebase';
+import { getDb } from '../firebase';
 import type { OrgMemberData } from '../models/organization/OrgMemberDataModel';
 
 function orgMembersCol(orgId: string) {
-  return collection(db, 'organizations', orgId, 'members');
+  return collection(getDb(), 'organizations', orgId, 'members');
 }
 
 export async function getOrgMembers(orgId: string): Promise<(OrgMemberData & { id: string })[]> {

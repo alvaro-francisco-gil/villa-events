@@ -49,8 +49,8 @@ export default function LoginPage() {
         await signUpWithEmail(email, password);
         // After signUpWithEmail, user will be set by onAuthStateChanged.
         // We need the uid — get it from the auth module directly.
-        const { auth } = await import('@cultuvilla/shared/firebase');
-        const uid = auth.currentUser?.uid;
+        const { getAuth } = await import('@cultuvilla/shared/firebase');
+        const uid = getAuth().currentUser?.uid;
         if (uid) {
           await createUserProfile(uid, {
             displayName: displayName.trim(),

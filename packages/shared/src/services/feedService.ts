@@ -11,7 +11,7 @@ import {
   type QueryDocumentSnapshot,
   type DocumentData,
 } from 'firebase/firestore';
-import { db } from '../firebase';
+import { getDb } from '../firebase';
 import { mapEventDoc } from './eventService';
 import type { EventData } from '../models/event/EventDataModel';
 
@@ -31,8 +31,8 @@ export async function getUpcomingFeed(
     firestoreLimit(pageSize),
   ];
   const q = cursor
-    ? query(collection(db, 'events'), ...baseConstraints, startAfter(cursor))
-    : query(collection(db, 'events'), ...baseConstraints);
+    ? query(collection(getDb(), 'events'), ...baseConstraints, startAfter(cursor))
+    : query(collection(getDb(), 'events'), ...baseConstraints);
 
   const snap = await getDocs(q);
   const events = snap.docs.map((d) => mapEventDoc(d as Parameters<typeof mapEventDoc>[0]));

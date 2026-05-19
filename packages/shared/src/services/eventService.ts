@@ -13,12 +13,12 @@ import {
   Timestamp,
   GeoPoint,
 } from 'firebase/firestore';
-import { db } from '../firebase';
+import { getDb } from '../firebase';
 import type { EventData, EventDataInput, EventStatus } from '../models/event/EventDataModel';
 import type { LocationData } from '../models/core/LocationDataModel';
 
 function eventsCol() {
-  return collection(db, 'events');
+  return collection(getDb(), 'events');
 }
 
 function mapLocationData(raw: Record<string, unknown>): LocationData {
@@ -55,6 +55,8 @@ export function mapEventDoc(
     municipalityName: data['municipalityName'] as string,
     municipalityCoverImage: (data['municipalityCoverImage'] as string | null) ?? null,
     municipalityCoordinates: (data['municipalityCoordinates'] as GeoPoint | null) ?? null,
+    confirmedCount: typeof data['confirmedCount'] === 'number' ? (data['confirmedCount'] as number) : undefined,
+    totalCount: typeof data['totalCount'] === 'number' ? (data['totalCount'] as number) : undefined,
   };
 }
 

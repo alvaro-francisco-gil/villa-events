@@ -11,12 +11,12 @@ import {
   increment,
 } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
-import { db, functions } from '../firebase';
+import { getDb, getFirebaseFunctions } from '../firebase';
 import type { InviteTokenData } from '../models/municipality/InviteTokenDataModel';
 import { isTokenExpired } from '../models/municipality/InviteTokenDataModel';
 
 function tokensCol(municipalityId: string) {
-  return collection(db, 'municipalities', municipalityId, 'inviteTokens');
+  return collection(getDb(), 'municipalities', municipalityId, 'inviteTokens');
 }
 
 function mapTokenDoc(d: { id: string; data: () => Record<string, unknown> }): InviteTokenData & { id: string } {
@@ -106,7 +106,7 @@ export async function acceptInvite(
       };
     },
     AcceptInviteResult
-  >(functions, 'acceptInvite');
+  >(getFirebaseFunctions(), 'acceptInvite');
 
   const payload = profile
     ? {

@@ -10,7 +10,7 @@ import {
   query,
   orderBy,
 } from 'firebase/firestore';
-import { db } from '../firebase';
+import { getDb } from '../firebase';
 import type { UserData, UserDataInput } from '../models/user/UserDataModel';
 
 function mapUserDoc(id: string, data: Record<string, unknown>): UserData & { id: string } {
@@ -31,13 +31,13 @@ function mapUserDoc(id: string, data: Record<string, unknown>): UserData & { id:
 export async function getUserProfile(
   userId: string
 ): Promise<(UserData & { id: string }) | null> {
-  const snap = await getDoc(doc(db, 'users', userId));
+  const snap = await getDoc(doc(getDb(), 'users', userId));
   if (!snap.exists()) return null;
   return mapUserDoc(snap.id, snap.data());
 }
 
 export async function getAllUsers(): Promise<(UserData & { id: string })[]> {
-  const q = query(collection(db, 'users'), orderBy('displayName', 'asc'));
+  const q = query(collection(getDb(), 'users'), orderBy('displayName', 'asc'));
   const snap = await getDocs(q);
   return snap.docs.map((d) => mapUserDoc(d.id, d.data()));
 }
@@ -46,7 +46,7 @@ export async function createUserProfile(
   userId: string,
   input: UserDataInput
 ): Promise<void> {
-  const docRef = doc(db, 'users', userId);
+  const docRef = doc(getDb(), 'users', userId);
   await setDoc(docRef, {
     displayName: input.displayName,
     email: input.email,
@@ -64,7 +64,7 @@ export async function updateUserProfile(
   userId: string,
   data: Partial<Pick<UserData, 'displayName' | 'biography' | 'telephone' | 'photoURL'>>
 ): Promise<void> {
-  const docRef = doc(db, 'users', userId);
+  const docRef = doc(getDb(), 'users', userId);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   await updateDoc(docRef, data as any);
 }
@@ -73,5 +73,5 @@ export async function setActiveMunicipality(
   userId: string,
   municipalityId: string | null,
 ): Promise<void> {
-  await updateDoc(doc(db, 'users', userId), { activeMunicipalityId: municipalityId });
+  await updateDoc(doc(getDb(), 'users', userId), { activeMunicipalityId: municipalityId });
 }
