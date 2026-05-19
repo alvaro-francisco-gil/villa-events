@@ -2,6 +2,7 @@ import * as admin from 'firebase-admin';
 admin.initializeApp();
 
 export { onRegistrationDeleted } from './waitlistPromotion';
+export { registerToEvent } from './registerToEvent';
 export { completeExpiredEvents } from './eventCompletion';
 export { onEventUpdated } from './notificationTriggers';
 export { acceptInvite } from './acceptInvite';

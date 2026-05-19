@@ -1,22 +1,30 @@
 import {
   collection, doc, getDocs, deleteDoc, query, orderBy, where,
-  writeBatch, serverTimestamp, Timestamp, collectionGroup, getCountFromServer,
+  Timestamp, collectionGroup, getCountFromServer,
 } from 'firebase/firestore'
-import { db } from '../firebase'
+import { httpsCallable } from 'firebase/functions'
+import { getDb, getFirebaseFunctions } from '../firebase'
 import type { RegistrationData, RegistrationStatus } from '../models/event/RegistrationDataModel'
 
 export interface RegisterInput {
-  userId: string
   personId: string
   name: string
 }
 
+export interface RegistrationSummary {
+  id: string
+  status: RegistrationStatus
+  position: number
+  isMember: boolean
+}
+
 function regsCol(eventId: string) {
-  return collection(db, 'events', eventId, 'registrations')
+  return collection(getDb(), 'events', eventId, 'registrations')
 }
 
 function mapRegDoc(d: { id: string; data: () => Record<string, unknown> }): RegistrationData & { id: string } {
   const data = d.data()
+  const isMember = typeof data['isMember'] === 'boolean' ? (data['isMember'] as boolean) : undefined
   return {
     id: d.id,
     userId: data['userId'] as string,
@@ -25,9 +33,13 @@ function mapRegDoc(d: { id: string; data: () => Record<string, unknown> }): Regi
     status: data['status'] as RegistrationStatus,
     position: data['position'] as number,
     registeredAt: (data['registeredAt'] as Timestamp).toDate(),
+    isMember,
   }
 }
 
+// Kept for callers that want a quick local prediction (e.g., showing "se irá a
+// lista de espera" hints in the sign-up modal). The actual confirmed/waitlisted
+// decision is made by the `registerToEvent` Cloud Function in a transaction.
 export function determineRegistrationStatus(
   maxAttendees: number | null,
   currentConfirmedCount: number
@@ -59,28 +71,25 @@ export async function getUserRegistrations(eventId: string, userId: string): Pro
   return snap.docs.map(d => mapRegDoc(d as Parameters<typeof mapRegDoc>[0]))
 }
 
+interface RegisterToEventCallableData {
+  eventId: string
+  registrants: RegisterInput[]
+}
+
+interface RegisterToEventCallableResult {
+  registrations: RegistrationSummary[]
+}
+
 export async function registerToEvent(
   eventId: string,
-  inputs: RegisterInput[],
-  maxAttendees: number | null
-): Promise<void> {
-  const confirmedCount = await getConfirmedCount(eventId)
-  const totalCount = await getTotalCount(eventId)
-  const batch = writeBatch(db)
-  inputs.forEach((input, i) => {
-    const newRef = doc(regsCol(eventId))
-    const position = totalCount + i + 1
-    const status = determineRegistrationStatus(maxAttendees, confirmedCount + i)
-    batch.set(newRef, {
-      userId: input.userId,
-      personId: input.personId,
-      name: input.name,
-      status,
-      position,
-      registeredAt: serverTimestamp(),
-    })
-  })
-  await batch.commit()
+  registrants: RegisterInput[],
+): Promise<RegistrationSummary[]> {
+  const callable = httpsCallable<RegisterToEventCallableData, RegisterToEventCallableResult>(
+    getFirebaseFunctions(),
+    'registerToEvent',
+  )
+  const res = await callable({ eventId, registrants })
+  return res.data.registrations
 }
 
 export async function cancelRegistration(eventId: string, regId: string): Promise<void> {
@@ -91,7 +100,7 @@ export async function getUserRegistrationsAcrossEvents(
   userId: string
 ): Promise<(RegistrationData & { id: string; eventPath: string })[]> {
   const q = query(
-    collectionGroup(db, 'registrations'),
+    collectionGroup(getDb(), 'registrations'),
     where('userId', '==', userId),
     orderBy('registeredAt', 'desc')
   )
@@ -100,6 +109,7 @@ export async function getUserRegistrationsAcrossEvents(
     const data = d.data()
     const pathSegments = d.ref.path.split('/')
     const eventPath = pathSegments.slice(0, 2).join('/')
+    const isMember = typeof data['isMember'] === 'boolean' ? (data['isMember'] as boolean) : undefined
     return {
       id: d.id,
       userId: data['userId'] as string,
@@ -108,6 +118,7 @@ export async function getUserRegistrationsAcrossEvents(
       status: data['status'] as RegistrationStatus,
       position: data['position'] as number,
       registeredAt: (data['registeredAt'] as Timestamp).toDate(),
+      isMember,
       eventPath,
     }
   })

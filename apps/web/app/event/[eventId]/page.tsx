@@ -6,7 +6,6 @@ import Link from 'next/link';
 import { getEvent } from '@cultuvilla/shared/services/eventService';
 import { cancelRegistration } from '@cultuvilla/shared/services/registrationService';
 import { getUserProfile } from '@cultuvilla/shared/services/userService';
-import { isVillageMember } from '@cultuvilla/shared/services/villageMemberService';
 import { AttendeeBadge } from '@/components/event/AttendeeBadge';
 import type { EventData } from '@cultuvilla/shared/models/event';
 import type { UserData } from '@cultuvilla/shared/models/user';
@@ -26,7 +25,6 @@ export default function EventDetailPage() {
   const [eventLoading, setEventLoading] = useState(true);
   const [userProfile, setUserProfile] = useState<(UserData & { id: string }) | null>(null);
   const [showSignUpModal, setShowSignUpModal] = useState(false);
-  const [memberOfVillage, setMemberOfVillage] = useState<Set<string>>(new Set());
 
   const { allRegistrations, myRegistrations, confirmedCount, loading: regsLoading, reload: reloadRegs } = useRegistrations(eventId);
   const { persons: personas } = usePersons();
@@ -42,18 +40,6 @@ export default function EventDetailPage() {
       getUserProfile(user.uid).then(setUserProfile);
     }
   }, [user]);
-
-  useEffect(() => {
-    if (!event || allRegistrations.length === 0) return;
-    const uniqueUserIds = Array.from(new Set(allRegistrations.map((r) => r.userId)));
-    Promise.all(
-      uniqueUserIds.map((uid) =>
-        isVillageMember(event.municipalityId, uid).then((ok) => (ok ? uid : null)),
-      ),
-    ).then((results) => {
-      setMemberOfVillage(new Set(results.filter((x): x is string => x !== null)));
-    });
-  }, [event, allRegistrations]);
 
   const handleCancel = async (regId: string) => {
     if (!confirm('¿Cancelar esta inscripción?')) return;
@@ -178,7 +164,7 @@ export default function EventDetailPage() {
                   <div>
                     <div className="flex items-center gap-1.5">
                       <p className="text-sm font-medium text-gray-900">{reg.name}</p>
-                      <AttendeeBadge isVecino={memberOfVillage.has(reg.userId)} />
+                      <AttendeeBadge isVecino={reg.isMember ?? false} />
                     </div>
                     <p className="text-xs text-gray-500">
                       {reg.status === 'confirmed' ? 'Confirmado' : 'En lista de espera'} · posición {reg.position}
