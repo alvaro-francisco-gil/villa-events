@@ -121,7 +121,9 @@ All non-trivial changes follow the same loop. Tiny edits (typo in a doc, a renam
    - **Tests** that were added (or an explicit note if none were possible).
    - **Test plan** as a checklist: local check, CI, manual verification steps.
 8. **Wait for the user to confirm the merge.** Once the PR is open and CI is green, summarize the result and stop. Do **not** merge autonomously, even if every check passes — the human is the merge gate.
-9. **If you broke a rule in this file deliberately**, update this file in the same PR.
+9. **Before merging, rebase the branch onto the latest `main`.** `git fetch origin main && git rebase origin/main`, resolve any conflicts, re-run `pnpm check`, then `git push --force-with-lease`. CI must go green again on the rebased commits before the merge. Stale branches cause silent breakage when the merge crosses a refactor that landed on main while the PR was in review.
+10. **Merge with a merge commit, not squash or rebase.** Use `gh pr merge <n> --merge`. Squashing would collapse the carefully-scoped commits in the PR (e.g. "feature" + "test for feature") into one, which makes `git bisect` and `git blame` worse. Rebase-merging hides the PR boundary entirely. A merge commit preserves both.
+11. **If you broke a rule in this file deliberately**, update this file in the same PR.
 
 ## Things to flag in PRs (or right here when you find them)
 
