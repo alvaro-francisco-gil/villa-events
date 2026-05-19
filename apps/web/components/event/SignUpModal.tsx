@@ -50,7 +50,6 @@ export function SignUpModal({
 
     if (selfSelected && canSignUpSelf && userProfile?.personId) {
       inputs.push({
-        userId: user.uid,
         personId: userProfile.personId,
         name: userProfile.displayName ?? user.displayName ?? user.email ?? 'Yo',
       });
@@ -59,7 +58,7 @@ export function SignUpModal({
     for (const personaId of selectedPersonaIds) {
       const persona = personas.find((p) => p.id === personaId);
       if (persona) {
-        inputs.push({ userId: user.uid, personId: personaId, name: buildDisplayName(persona) });
+        inputs.push({ personId: personaId, name: buildDisplayName(persona) });
       }
     }
 
@@ -71,7 +70,7 @@ export function SignUpModal({
     setSubmitting(true);
     setError('');
     try {
-      await registerToEvent(event.id, inputs, event.maxAttendees);
+      await registerToEvent(event.id, inputs);
       onSuccess();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Error al inscribirse.');

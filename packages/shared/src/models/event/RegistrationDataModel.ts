@@ -8,6 +8,11 @@ export interface RegistrationData {
   status: RegistrationStatus
   position: number
   registeredAt: Date
+  // Denormalized at write time by the `registerToEvent` Cloud Function so UIs
+  // showing village-vs-visitor badges don't need a per-attendee membership
+  // lookup. Optional because pre-callable registrations may lack the field;
+  // treat missing as `false` and rely on a backfill to converge.
+  isMember?: boolean
 }
 
 export interface RegistrationDataInput {
@@ -17,6 +22,7 @@ export interface RegistrationDataInput {
   status: RegistrationStatus
   position: number
   registeredAt?: Date
+  isMember?: boolean
 }
 
 export function buildRegistrationData(input: RegistrationDataInput): RegistrationData {
