@@ -1,51 +1,46 @@
 # Cloud Functions tests
 
-Two recommended approaches as functions grow:
+Two layers, kept in separate vitest configs so the unit layer never depends on emulators.
 
-## 1. Pure-helper unit tests (fast, no emulator)
+## Pure-helper unit tests — `__tests__/helpers/`
 
-Extract pure logic out of Cloud Function bodies into small helper modules
-(e.g. `functions/src/helpers/validateProfileForm.ts`) and unit-test it
-directly. No `firebase-admin` init, no emulator. This is the cheapest test
-and should be the first thing you reach for.
-
-```ts
-import { describe, it, expect } from 'vitest';
-import { validateProfileFormTransition } from '../helpers/validateProfileForm';
-
-describe('validateProfileFormTransition', () => {
-  it('rejects duplicate keys', () => {
-    expect(() => validateProfileFormTransition([], [
-      { source: 'predefined', key: 'barrio', required: true },
-      { source: 'predefined', key: 'barrio', required: false },
-    ], {})).toThrow(/duplicada/);
-  });
-});
-```
-
-## 2. Emulator-backed function invocation (heavier, runs the real handler)
-
-Use `firebase-functions-test` to invoke a callable / trigger handler with
-the Firestore + Auth emulators running. Wire it through the root
-orchestrator so the emulator suite is started for you:
+Tests for stateless helpers extracted out of handler bodies. No emulator, no
+`firebase-admin` init. Goal: every pure rule the handler relies on is covered
+here.
 
 ```bash
-pnpm test:functions   # starts emulators, then runs vitest in functions/
+pnpm functions:test     # local, fast
 ```
 
-A typical setup file at `functions/src/__tests__/setup.ts` would:
-- set `FIRESTORE_EMULATOR_HOST` / `FIREBASE_AUTH_EMULATOR_HOST`
-- initialize `firebase-admin` against the emulator
-- import the function under test
+Example: [`profileFormValidation.test.ts`](./helpers/profileFormValidation.test.ts) covers `ensureValidFieldShape` + `validateTransition` extracted from `updateCenso.ts`.
 
-Bring in `firebase-functions-test` as a devDependency when you write the
-first real handler test.
+When adding a new function, extract the pure validation/decision logic into
+`functions/src/helpers/` first, and test it here.
 
-## File layout
+## Handler tests — `__tests__/handlers/`
+
+Tests that exercise the actual exported Cloud Function via
+[`firebase-functions-test`](https://firebase.google.com/docs/functions/unit-testing) against the Firestore + Auth emulators. Reserve these for behavior that
+can only be observed via Firestore state (writes, queries, multi-doc effects).
+
+```bash
+pnpm test:functions     # root: boots emulators, runs vitest with the integration config
+```
+
+The setup file [`setup/admin.setup.ts`](./setup/admin.setup.ts) sets emulator env vars + initializes `firebase-admin` before any handler is imported. Reset emulator state in `beforeEach` via [`helpers/firestoreEmulator.ts`](./helpers/firestoreEmulator.ts) so each test starts empty.
+
+Example: [`waitlistPromotion.test.ts`](./handlers/waitlistPromotion.test.ts) exercises `onRegistrationDeleted` — verifies waitlisted-deletion no-op, missing maxAttendees no-op, empty-waitlist no-op, and the happy-path promotion+notification.
+
+## Layout
 
 ```
 functions/src/__tests__/
-├── smoke.test.ts                       (placeholder — replace)
-├── helpers/                            (pure-helper tests, no emulator)
-└── handlers/                           (emulator-backed handler tests)
+├── helpers/
+│   ├── firestoreEmulator.ts            (REST resetEmulators / clearFirestore)
+│   └── profileFormValidation.test.ts   (pure-helper unit tests)
+├── handlers/
+│   └── waitlistPromotion.test.ts       (emulator-backed handler tests)
+├── setup/
+│   └── admin.setup.ts                  (env + admin init, loaded by integration config)
+└── README.md
 ```

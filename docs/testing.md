@@ -5,10 +5,10 @@ Four layers, three of which need the Firebase Emulator Suite.
 | Layer | Where it lives | Runner | Needs emulator | Command |
 |-------|----------------|--------|----------------|---------|
 | **Unit (shared)** | `packages/shared/test/models/` + `packages/shared/test/services/` | vitest (`vitest.config.ts`) | No | `pnpm test` |
-| **Unit (functions)** | `functions/src/__tests__/*.test.ts` | vitest (`functions/vitest.config.mjs`) | No (today: smoke only) | `pnpm functions:test` |
+| **Unit (functions)** | `functions/src/__tests__/helpers/` | vitest (`functions/vitest.config.mjs`) | No | `pnpm functions:test` |
 | **Integration** | `packages/shared/test/integration/` | vitest (`vitest.config.integration.ts`) | Yes (firestore + auth) | `pnpm test:integration` |
 | **E2E — Firestore rules** | `packages/shared/test/e2e/` | vitest (`vitest.config.e2e.ts`) using `@firebase/rules-unit-testing` | Yes (firestore) | `pnpm test:rules` |
-| **E2E — Cloud Functions** | `functions/src/__tests__/handlers/` (to be added) | vitest + `firebase-functions-test` | Yes (firestore + auth + functions) | `pnpm test:functions` |
+| **E2E — Cloud Functions** | `functions/src/__tests__/handlers/` | vitest (`functions/vitest.config.integration.mjs`) + `firebase-functions-test` | Yes (firestore + auth) | `pnpm test:functions` |
 
 ## Quick start
 
@@ -50,9 +50,12 @@ packages/shared/test/
 └── README.md
 
 functions/src/__tests__/
-├── smoke.test.ts                 # placeholder
-├── helpers/                      # add pure-helper unit tests here
-├── handlers/                     # add emulator-backed handler tests here
+├── helpers/
+│   └── profileFormValidation.test.ts  # pure-helper unit tests (no emulator)
+├── handlers/
+│   └── waitlistPromotion.test.ts      # emulator-backed handler tests
+├── setup/
+│   └── admin.setup.ts                 # env vars + admin.initializeApp() for handlers
 └── README.md
 ```
 
