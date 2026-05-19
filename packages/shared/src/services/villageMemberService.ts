@@ -11,12 +11,12 @@ import {
   where,
   query,
 } from 'firebase/firestore';
-import { db } from '../firebase';
+import { getDb } from '../firebase';
 import type { VillageMemberData, VillageMemberRole } from '../models/municipality/VillageMemberDataModel';
 import type { ProfileAnswers } from '../models/municipality/CensoTypes';
 
 function membersCol(municipalityId: string) {
-  return collection(db, 'municipalities', municipalityId, 'members');
+  return collection(getDb(), 'municipalities', municipalityId, 'members');
 }
 
 function mapMemberDoc(
@@ -95,7 +95,7 @@ export interface UserMembership {
 }
 
 export async function getUserMemberships(userId: string): Promise<UserMembership[]> {
-  const q = query(collectionGroup(db, 'members'), where('userId', '==', userId));
+  const q = query(collectionGroup(getDb(), 'members'), where('userId', '==', userId));
   const snap = await getDocs(q);
   return snap.docs
     .filter((d) => d.ref.parent.parent?.parent.id === 'municipalities')

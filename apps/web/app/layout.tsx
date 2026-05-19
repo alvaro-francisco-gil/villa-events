@@ -1,3 +1,4 @@
+import '@/lib/firebaseInit';
 import type { Metadata } from 'next';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { BottomNav } from '@/components/common/BottomNav';

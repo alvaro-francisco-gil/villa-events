@@ -24,6 +24,12 @@ export interface EventData {
   municipalityName: string;
   municipalityCoverImage: string | null;
   municipalityCoordinates: GeoPoint | null;
+  // Registration counters maintained by `registerToEvent` and
+  // `onRegistrationDeleted`. Optional because events created before the
+  // callable rollout don't carry them yet; readers should fall back to a
+  // count query when undefined.
+  confirmedCount?: number;
+  totalCount?: number;
 }
 
 export interface EventDataInput {

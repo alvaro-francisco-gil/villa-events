@@ -114,6 +114,30 @@ describe('onRegistrationDeleted (waitlist promotion)', () => {
     expect(notifs.size).toBe(0);
   });
 
+  it('updates confirmedCount and totalCount on the event after deletion', async () => {
+    // Seed an event with bogus counts to ensure the trigger recomputes from
+    // the source of truth rather than trusting whatever was on the doc.
+    await admin.firestore().doc(`events/${EVENT_ID}`).set({
+      title: 'Fiesta',
+      maxAttendees: 5,
+      municipalityId: MUNICIPALITY_ID,
+      confirmedCount: 999,
+      totalCount: 999,
+    });
+    await seedRegistration({ id: 'r2', status: 'confirmed', userId: 'bob', name: 'Bob', position: 2 });
+    await seedRegistration({ id: 'r3', status: 'waitlisted', userId: 'carol', name: 'Carol', position: 3 });
+
+    await invokeDelete({ id: 'r1', status: 'confirmed', userId: 'alice', name: 'Alice' });
+
+    const eventDoc = await admin.firestore().doc(`events/${EVENT_ID}`).get();
+    // After the trigger handles the deletion: r3 is promoted from waitlist
+    // to confirmed, so r2 and r3 are both confirmed. Counts come from
+    // authoritative aggregates over the collection, overriding the bogus
+    // 999s seeded above.
+    expect(eventDoc.data()?.confirmedCount).toBe(2);
+    expect(eventDoc.data()?.totalCount).toBe(2);
+  });
+
   it('promotes the next waitlisted user and creates a notification', async () => {
     await seedEvent({ title: 'Fiesta del pueblo', maxAttendees: 2 });
     await seedRegistration({

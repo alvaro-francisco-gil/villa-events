@@ -39,7 +39,12 @@ export function VillageImagesInput({
     try {
       const newUrls: string[] = [];
       for (let i = 0; i < slots; i++) {
-        const url = await uploadMunicipalityImage(municipalityId, files[i]);
+        const file = files[i];
+        const url = await uploadMunicipalityImage(municipalityId, {
+          blob: file,
+          filename: file.name,
+          contentType: file.type,
+        });
         newUrls.push(url);
       }
       onChange([...value, ...newUrls]);

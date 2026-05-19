@@ -12,7 +12,7 @@ import {
   serverTimestamp,
   Timestamp,
 } from 'firebase/firestore';
-import { db } from '../firebase';
+import { getDb } from '../firebase';
 import type {
   OrganizationData,
   OrganizationDataInput,
@@ -20,7 +20,7 @@ import type {
 } from '../models/organization/OrganizationDataModel';
 
 function orgsCol() {
-  return collection(db, 'organizations');
+  return collection(getDb(), 'organizations');
 }
 
 function mapOrgDoc(d: { id: string; data: () => Record<string, unknown> }): OrganizationData & { id: string } {

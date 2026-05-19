@@ -7,9 +7,21 @@ All notable changes to this project. Format adapted from [Keep a Changelog](http
 ### Added
 - **Cloud Functions logging convention** documented in AGENTS.md: handlers use `logger.{info,warn,error}` from `firebase-functions/v2` with a structured second arg so Cloud Logging treats them as `jsonPayload` (searchable). The lone existing `console.*` call site (`onOccupationProposalApproved.ts`) was migrated.
 - **Invariant test** at [functions/src/__tests__/helpers/no-console.test.ts](functions/src/__tests__/helpers/no-console.test.ts) — scans `functions/src/` and fails the build if any `console.*` call slips back in.
+- **`registerToEvent` callable** at [functions/src/registerToEvent.ts](functions/src/registerToEvent.ts) runs the capacity-vs-waitlist decision and write in a Firestore transaction, replacing the client-side read-then-write batch that had a TOCTOU race. Writes `isMember` on each registration (denormalized from the village `members/` collection at write time) so attendee lists no longer need a per-user `isVillageMember` fan-out. Pure helpers under [functions/src/helpers/registerToEventValidation.ts](functions/src/helpers/registerToEventValidation.ts) for fast unit coverage.
+- **Denormalized `confirmedCount` / `totalCount` on event docs**: `registerToEvent` writes them in the transaction; `onRegistrationDeleted` recomputes after delete + promotion. Lets feeds and event cards render attendee counts without an extra `getCountFromServer` round-trip. Pre-existing events get correct counts on the next registration write or cancellation.
 
 ### Changed
 - **CI: Java 17 → 21** for the emulator-tests job. `firebase-tools@15` will drop support for Java < 21; bumping ahead of the deprecation removes the runtime warning and keeps the job working when firebase-tools rolls forward.
+- **Shared Firebase init is now config-injected** ([packages/shared/src/firebase/firebaseApp.ts](packages/shared/src/firebase/firebaseApp.ts)). Apps call `initFirebase(config, opts?)` once at startup and consume `getDb()`, `getAuth()`, `getFirebaseStorage()`, `getFirebaseFunctions()`, `getFirebaseApp()` accessors. The previous `process.env.NEXT_PUBLIC_*`-baked singleton was a hard blocker for a future React Native app (Expo doesn't expose those env vars and RN needs `getReactNativePersistence` for auth). The web app now initializes from `apps/web/lib/firebaseInit.ts`. RN apps can pass a `customizeAuth` hook to register `initializeAuth(app, { persistence: getReactNativePersistence(AsyncStorage) })`.
+- **`firebase` moved from `dependencies` to `peerDependencies`** in `@cultuvilla/shared`, so the consuming app owns the SDK instance and Metro/Next don't end up with two copies in a monorepo.
+- **`imageService` is now `Blob`-based**: `uploadMunicipalityImage` and `uploadPersonImage` accept `{ blob, filename, contentType? }` instead of a web `File`. RN consumers will pass `await fetch(uri).then(r => r.blob())`; web call sites wrap the `File` (which is already a `Blob`) inline.
+- **Web `registerToEvent` is now a callable wrapper** in [packages/shared/src/services/registrationService.ts](packages/shared/src/services/registrationService.ts). Drops the legacy client-side `getConfirmedCount` + `writeBatch` path. Signature changed from `(eventId, inputs, maxAttendees)` to `(eventId, registrants)`; `userId` is read from `request.auth.uid` server-side and no longer accepted in the input.
+- **Firestore rules**: `events/{eventId}/registrations/{regId}` `allow create: if false` — the callable is the only sanctioned write path.
+- **`useRegistrations`** drops the separate `getConfirmedCount` round-trip and derives `confirmedCount` from the already-loaded registration list. Event detail page reads `reg.isMember` directly, eliminating the O(N) `isVillageMember` fan-out on each view.
+
+### Notes for deploy
+- Pre-existing events have no `confirmedCount` / `totalCount` until the next registration write or cancellation triggers a recompute. UIs that need these counts before that should fall back to a count query (or run a one-shot backfill).
+- Pre-existing registrations have no `isMember`. The event detail page treats missing as `false` (shown as "Visitante"). A backfill helper can be added in a follow-up if needed.
 
 ## 2026-05-19 — Workflow conventions (PR #2)
 

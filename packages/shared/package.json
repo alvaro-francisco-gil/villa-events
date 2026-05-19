@@ -17,11 +17,14 @@
     "test:rules": "vitest run --config vitest.config.e2e.ts"
   },
   "dependencies": {
-    "firebase": "^11.0.0",
     "zod": "^4.4.3"
+  },
+  "peerDependencies": {
+    "firebase": "^11.0.0"
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "^4.0.1",
+    "firebase": "^11.0.0",
     "typescript": "~5.8.3",
     "vitest": "^4.0.15"
   }
