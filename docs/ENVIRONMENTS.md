@@ -9,13 +9,14 @@ Firebase project; the active env is selected at build time by a single
 | Firebase project    | `villa-events`                       | `cultuvilla-beta`                    | `cultuvilla-prod`                 |
 | `.firebaserc` alias | `dev` (also the `default`)           | `beta`                               | `prod`                            |
 | Firestore region    | `europe-southwest1` (Madrid)         | `europe-southwest1` (Madrid)         | `europe-southwest1` (Madrid)      |
-| Vercel scope        | Development + Preview                | (own Vercel project, future)         | Production                        |
-| Domain              | `*.vercel.app` previews, `localhost` | TBD (beta subdomain or branch)       | apex production domain (when set) |
+| Vercel project      | `cultuvilla` (PR previews + main)    | `cultuvilla-web-beta` (main)         | `cultuvilla` (main → production)  |
+| Public URL          | `*.vercel.app` previews, `localhost` | `cultuvilla-web-beta.vercel.app`     | `villa-events-web.vercel.app` (apex TBD) |
 | `NEXT_PUBLIC_APP_ENV` value | `dev`                        | `beta`                               | `prod`                            |
 
-There is one Vercel project (`cultuvilla-web`) today. `beta` is a Firebase
-project for backend testing; if/when it gets its own deployed web URL, add
-a second Vercel project (or a specific branch with `NEXT_PUBLIC_APP_ENV=beta`).
+Two Vercel projects, both linked to `alvaro-francisco-gil/cultuvilla` on
+`main`: `cultuvilla` (the original) drives PR previews + the prod URL,
+and `cultuvilla-web-beta` shadows `main` against the `cultuvilla-beta`
+Firebase project.
 
 ## Configuration model
 
@@ -77,13 +78,12 @@ Note: re-running it will overwrite manual edits.
 Vercel manages env vars per scope. Each scope only needs the values for
 the env it deploys:
 
-| Scope                    | `NEXT_PUBLIC_APP_ENV` | Other vars to set                |
-| ------------------------ | --------------------- | -------------------------------- |
-| Development + Preview    | `dev`                 | `NEXT_PUBLIC_FIREBASE_*_DEV`     |
-| Production               | `prod`                | `NEXT_PUBLIC_FIREBASE_*_PROD`    |
-
-If a separate Vercel project (or scope) is added for beta, set
-`NEXT_PUBLIC_APP_ENV=beta` and `NEXT_PUBLIC_FIREBASE_*_BETA` there.
+| Vercel project        | Scope         | `NEXT_PUBLIC_APP_ENV` | Other vars to set              |
+| --------------------- | ------------- | --------------------- | ------------------------------ |
+| `cultuvilla`          | Development   | `dev`                 | `NEXT_PUBLIC_FIREBASE_*_DEV`   |
+| `cultuvilla`          | Preview       | `dev`                 | `NEXT_PUBLIC_FIREBASE_*_DEV`   |
+| `cultuvilla`          | Production    | `prod`                | `NEXT_PUBLIC_FIREBASE_*_PROD`  |
+| `cultuvilla-web-beta` | Production    | `beta`                | `NEXT_PUBLIC_FIREBASE_*_BETA`  |
 
 You can also redundantly set all three sets on every scope — the build
 only reads the active env's vars, but having values present everywhere
@@ -155,6 +155,23 @@ When provisioning each new project (`cultuvilla-beta`, `cultuvilla-prod`),
 enable the same set. For Google sign-in specifically, the OAuth client ID
 will differ between projects — that's expected and managed transparently
 by Firebase Auth.
+
+### Authorized domains
+
+Firebase Auth only honors OAuth/sign-in redirects to domains in its
+**Authorized domains** list. All three projects share the same baseline:
+
+- `localhost` (default)
+- `<project>.firebaseapp.com` (default)
+- `<project>.web.app` (default)
+- `vercel.app` — covers every `*.vercel.app` preview and the project's
+  own assigned URLs
+
+`villa-events` additionally keeps `villa-events-web.vercel.app` for
+backward compatibility. When apex production / beta custom domains land,
+add them here too. Configurable via Firebase console → Authentication →
+Settings → Authorized domains, or the Identity Toolkit Admin REST API
+(`PATCH /admin/v2/projects/{id}/config?updateMask=authorizedDomains`).
 
 ## Setting up a new Firebase project (beta or prod)
 
