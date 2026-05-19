@@ -1,4 +1,4 @@
-import type { HTMLAttributes, ReactNode, JSX } from 'react';
+import type { HTMLAttributes, ReactNode, ElementType } from 'react';
 import type { TypographyVariant } from '@cultuvilla/shared/design-system';
 
 type Tone = 'primary' | 'muted' | 'onAccent' | 'danger' | 'success';
@@ -17,7 +17,9 @@ const TONE_CLASS: Record<Tone, string> = {
   success: 'text-success',
 };
 
-const TAG: Record<TypographyVariant, keyof JSX.IntrinsicElements> = {
+type HeadingTag = 'h1' | 'h2' | 'h3' | 'span';
+
+const TAG: Record<TypographyVariant, HeadingTag> = {
   display: 'h1',
   h1: 'h1',
   h2: 'h2',
@@ -37,7 +39,7 @@ export function Text({
   className = '',
   ...rest
 }: TextProps) {
-  const Tag = TAG[variant];
+  const Tag: ElementType = TAG[variant];
   return (
     <Tag
       className={`text-${variant} ${TONE_CLASS[tone]} ${className}`}
