@@ -70,7 +70,11 @@ export default function PersonsPage() {
       createdBy: user.uid,
     })
     if (data.photoFile) {
-      const photoURL = await uploadPersonImage(personId, data.photoFile)
+      const photoURL = await uploadPersonImage(personId, {
+        blob: data.photoFile,
+        filename: data.photoFile.name,
+        contentType: data.photoFile.type,
+      })
       await updatePerson(personId, { photoURL })
     }
     await proposeNewPendingOccupations([], data.pendingOccupations, user.uid)
@@ -84,7 +88,11 @@ export default function PersonsPage() {
 
     let photoURL: string | undefined
     if (data.photoFile) {
-      photoURL = await uploadPersonImage(personId, data.photoFile)
+      photoURL = await uploadPersonImage(personId, {
+        blob: data.photoFile,
+        filename: data.photoFile.name,
+        contentType: data.photoFile.type,
+      })
     }
     await updatePerson(personId, {
       givenName: data.givenName,
