@@ -12,6 +12,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@cultuvilla/i18n": "workspace:*",
     "@cultuvilla/shared": "workspace:*",
     "@hookform/resolvers": "^5.2.2",
     "firebase": "^11.0.0",

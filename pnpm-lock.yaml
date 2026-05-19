@@ -32,6 +32,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@cultuvilla/i18n':
+        specifier: workspace:*
+        version: link:../../packages/i18n
       '@cultuvilla/shared':
         specifier: workspace:*
         version: link:../../packages/shared
