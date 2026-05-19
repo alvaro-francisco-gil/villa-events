@@ -90,9 +90,6 @@ importers:
 
   packages/shared:
     dependencies:
-      firebase:
-        specifier: ^11.0.0
-        version: 11.10.0
       zod:
         specifier: ^4.4.3
         version: 4.4.3
@@ -100,6 +97,9 @@ importers:
       '@firebase/rules-unit-testing':
         specifier: ^4.0.1
         version: 4.0.1(firebase@11.10.0)
+      firebase:
+        specifier: ^11.0.0
+        version: 11.10.0
       typescript:
         specifier: ~5.8.3
         version: 5.8.3

@@ -2,11 +2,11 @@ import {
   collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc,
   query, where, orderBy, serverTimestamp, Timestamp,
 } from 'firebase/firestore'
-import { db } from '../firebase'
+import { getDb } from '../firebase'
 import type { PersonData, PersonDataInput, PartialDate, MunicipalityLink, BurialPlace } from '../models/person'
 
 function personsCol() {
-  return collection(db, 'persons')
+  return collection(getDb(), 'persons')
 }
 
 function toPartialDate(val: unknown): PartialDate | null {

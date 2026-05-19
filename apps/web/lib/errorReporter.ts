@@ -3,7 +3,8 @@
 // dashboard alongside other events. This is intentionally a thin wrapper so we
 // can swap in Google Cloud Error Reporting later without touching call sites.
 
-import { app } from '@cultuvilla/shared/firebase';
+import '@/lib/firebaseInit';
+import { getFirebaseApp } from '@cultuvilla/shared/firebase';
 import {
   getAnalytics,
   isSupported,
@@ -17,7 +18,7 @@ function getAnalyticsLazy(): Promise<Analytics | null> {
   if (typeof window === 'undefined') return Promise.resolve(null);
   if (!analyticsPromise) {
     analyticsPromise = isSupported()
-      .then((supported) => (supported ? getAnalytics(app) : null))
+      .then((supported) => (supported ? getAnalytics(getFirebaseApp()) : null))
       .catch(() => null);
   }
   return analyticsPromise;

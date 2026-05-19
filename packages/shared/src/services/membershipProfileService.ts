@@ -1,5 +1,5 @@
 import { doc, updateDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
-import { db } from '../firebase';
+import { getDb } from '../firebase';
 import type { ProfileAnswers, ProfileFormField } from '../models/municipality/CensoTypes';
 import { isCensoComplete } from './censoService';
 
@@ -15,7 +15,7 @@ export async function saveProfileAnswers(
   fields: ProfileFormField[],
   answers: ProfileAnswers,
 ): Promise<void> {
-  const memberRef = doc(db, 'municipalities', municipalityId, 'members', userId);
+  const memberRef = doc(getDb(), 'municipalities', municipalityId, 'members', userId);
   const complete = isCensoComplete(fields, answers);
   await updateDoc(memberRef, {
     profileAnswers: answers,
