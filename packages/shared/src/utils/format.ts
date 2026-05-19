@@ -39,3 +39,11 @@ export function formatDate(date: Date, style: DateStyle = 'short'): string {
       }).format(date);
   }
 }
+
+export function formatPrice(amount: number, currency: string = 'EUR'): string {
+  return new Intl.NumberFormat(LOCALE, {
+    style: 'currency',
+    currency,
+    useGrouping: true,
+  }).format(amount);
+}

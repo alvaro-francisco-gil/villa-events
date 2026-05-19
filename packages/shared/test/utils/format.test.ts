@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatDate } from '../../src/utils/format';
+import { formatDate, formatPrice } from '../../src/utils/format';
 
 describe('formatDate', () => {
   const d = new Date('2026-05-19T15:30:00.000Z');
@@ -23,5 +23,20 @@ describe('formatDate', () => {
   it('formats datetime (date + time)', () => {
     expect(formatDate(d, 'datetime')).toMatch(/2026/);
     expect(formatDate(d, 'datetime')).toMatch(/\d{1,2}:\d{2}/);
+  });
+});
+
+describe('formatPrice', () => {
+  it('formats EUR by default with the Spanish thousands separator', () => {
+    expect(formatPrice(1234.5)).toMatch(/1\.234,50/);
+    expect(formatPrice(1234.5)).toMatch(/€/);
+  });
+
+  it('treats zero as a real value, not a missing one', () => {
+    expect(formatPrice(0)).toMatch(/0,00/);
+  });
+
+  it('honors a custom currency', () => {
+    expect(formatPrice(10, 'USD')).toMatch(/10,00/);
   });
 });
