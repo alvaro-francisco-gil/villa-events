@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { GeoPoint } from '@cultuvilla/shared/firebase';
 import {
   createVillage,
@@ -12,8 +14,11 @@ import {
   COUNTRIES,
   COMUNIDADES_AUTONOMAS,
   PROVINCIAS_BY_COMUNIDAD,
+  VillageFormSchema,
   type ComunidadAutonoma,
   type VillageData,
+  type VillageFormInput,
+  type VillageFormValues,
 } from '@cultuvilla/shared/models/village';
 import { UserPicker } from './UserPicker';
 import { LocationPicker } from './LocationPicker';
@@ -44,96 +49,96 @@ export function VillageForm({
   // Stable village id: existing one in edit mode, freshly generated in create mode.
   const [villageId] = useState(() => initial?.id ?? generateVillageId());
 
-  const [name, setName] = useState(initial?.name ?? '');
-  const [description, setDescription] = useState(initial?.description ?? '');
-  const [country, setCountry] = useState<string>(initial?.country ?? COUNTRIES[0].name);
-  const [comunidadAutonoma, setComunidadAutonoma] = useState<ComunidadAutonoma | ''>(
-    (initial?.comunidadAutonoma as ComunidadAutonoma | undefined) ?? '',
-  );
-  const [provincia, setProvincia] = useState(initial?.provincia ?? '');
-  const [location, setLocation] = useState<LocationValue | null>(
-    initial
-      ? {
-          lat: initial.coordinates.latitude,
-          lng: initial.coordinates.longitude,
-          displayName: `${initial.provincia}, ${initial.comunidadAutonoma}`,
-        }
-      : null,
-  );
-  const [barrios, setBarrios] = useState<string[]>(initial?.barrios ?? []);
-  const [images, setImages] = useState<string[]>(initial?.images ?? []);
-  const [adminUserId, setAdminUserId] = useState(initial?.adminUserId ?? currentUserId);
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState('');
+  const initialLocation: LocationValue | null = initial
+    ? {
+        lat: initial.coordinates.latitude,
+        lng: initial.coordinates.longitude,
+        displayName: `${initial.provincia}, ${initial.comunidadAutonoma}`,
+      }
+    : null;
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    setError,
+    watch,
+    formState: { errors, isSubmitting },
+  } = useForm<VillageFormInput, unknown, VillageFormValues>({
+    resolver: zodResolver(VillageFormSchema),
+    defaultValues: {
+      name: initial?.name ?? '',
+      description: initial?.description ?? '',
+      country: initial?.country ?? COUNTRIES[0].name,
+      comunidadAutonoma: (initial?.comunidadAutonoma as ComunidadAutonoma | undefined) ?? undefined,
+      provincia: initial?.provincia ?? '',
+      location: initialLocation,
+      barrios: initial?.barrios ?? [],
+      images: initial?.images ?? [],
+      adminUserId: initial?.adminUserId ?? currentUserId,
+    },
+  });
+
+  const comunidadAutonoma = watch('comunidadAutonoma') as ComunidadAutonoma | undefined;
+  const provincia = watch('provincia');
+  const location = watch('location') as LocationValue | null;
+  const barrios = watch('barrios') as string[];
+  const images = watch('images') as string[];
+  const adminUserId = watch('adminUserId');
 
   const provinciaOptions = comunidadAutonoma ? PROVINCIAS_BY_COMUNIDAD[comunidadAutonoma] : [];
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
+  const submit = handleSubmit(async (data) => {
+    // Validation guarantees data.location is non-null.
+    const loc = data.location!;
+    const payload = {
+      name: data.name,
+      description: data.description,
+      country: data.country,
+      comunidadAutonoma: data.comunidadAutonoma,
+      provincia: data.provincia,
+      coordinates: new GeoPoint(loc.lat, loc.lng),
+      barrios: data.barrios,
+      images: data.images,
+      adminUserId: data.adminUserId,
+    };
 
-    if (!comunidadAutonoma) return setError('Selecciona una comunidad autónoma');
-    if (!provincia) return setError('Selecciona una provincia');
-    if (!location) return setError('Selecciona la ubicación');
-    if (!adminUserId) return setError('Selecciona el administrador');
-
-    setSubmitting(true);
     try {
-      const payload = {
-        name: name.trim(),
-        description: description.trim(),
-        country,
-        comunidadAutonoma,
-        provincia,
-        coordinates: new GeoPoint(location.lat, location.lng),
-        barrios,
-        images,
-        adminUserId,
-      };
-
       if (mode === 'create') {
         await createVillage(payload, villageId);
-        if (adminUserId === currentUserId) {
+        if (data.adminUserId === currentUserId) {
           await setActiveVillage(currentUserId, villageId);
         }
       } else {
         await updateVillage(villageId, payload);
       }
-
       onSubmitted();
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Error al guardar');
-    } finally {
-      setSubmitting(false);
+      setError('root', { message: e instanceof Error ? e.message : 'Error al guardar' });
     }
-  };
+  });
 
   const inputClass =
     'w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white border border-gray-200 rounded-lg p-4 space-y-4">
-      <input
-        className={inputClass}
-        placeholder="Nombre del pueblo"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        required
-      />
-      <textarea
-        className={inputClass}
-        placeholder="Descripción"
-        rows={2}
-        value={description}
-        onChange={(e) => setDescription(e.target.value)}
-        required
-      />
+    <form onSubmit={submit} className="bg-white border border-gray-200 rounded-lg p-4 space-y-4" noValidate>
+      <div>
+        <input className={inputClass} placeholder="Nombre del pueblo" {...register('name')} />
+        {errors.name && <p className="text-xs text-red-600 mt-1">{errors.name.message}</p>}
+      </div>
+      <div>
+        <textarea className={inputClass} placeholder="Descripción" rows={2} {...register('description')} />
+        {errors.description && <p className="text-xs text-red-600 mt-1">{errors.description.message}</p>}
+      </div>
 
       <div>
         <label className="block text-xs text-gray-500 mb-1">País</label>
-        <select className={inputClass} value={country} onChange={(e) => setCountry(e.target.value)}>
+        <select className={inputClass} {...register('country')}>
           {COUNTRIES.map((c) => (
-            <option key={c.code} value={c.name}>{c.name}</option>
+            <option key={c.code} value={c.name}>
+              {c.name}
+            </option>
           ))}
         </select>
       </div>
@@ -142,45 +147,67 @@ export function VillageForm({
         <label className="block text-xs text-gray-500 mb-1">Comunidad Autónoma</label>
         <select
           className={inputClass}
-          value={comunidadAutonoma}
+          value={comunidadAutonoma ?? ''}
           onChange={(e) => {
-            setComunidadAutonoma(e.target.value as ComunidadAutonoma);
-            setProvincia('');
+            setValue('comunidadAutonoma', e.target.value as ComunidadAutonoma, { shouldValidate: true });
+            setValue('provincia', '', { shouldValidate: true });
           }}
-          required
         >
           <option value="">Selecciona...</option>
           {COMUNIDADES_AUTONOMAS.map((c) => (
-            <option key={c} value={c}>{c}</option>
+            <option key={c} value={c}>
+              {c}
+            </option>
           ))}
         </select>
+        {errors.comunidadAutonoma && (
+          <p className="text-xs text-red-600 mt-1">{errors.comunidadAutonoma.message}</p>
+        )}
       </div>
 
       <div>
         <label className="block text-xs text-gray-500 mb-1">Provincia</label>
         <select
           className={inputClass}
-          value={provincia}
-          onChange={(e) => setProvincia(e.target.value)}
+          value={provincia ?? ''}
+          onChange={(e) => setValue('provincia', e.target.value, { shouldValidate: true })}
           disabled={!comunidadAutonoma}
-          required
         >
           <option value="">Selecciona...</option>
           {provinciaOptions.map((p) => (
-            <option key={p} value={p}>{p}</option>
+            <option key={p} value={p}>
+              {p}
+            </option>
           ))}
         </select>
+        {errors.provincia && <p className="text-xs text-red-600 mt-1">{errors.provincia.message}</p>}
       </div>
 
-      <LocationPicker value={location} onChange={setLocation} />
+      <LocationPicker
+        value={location}
+        onChange={(v) => setValue('location', v, { shouldValidate: true })}
+      />
+      {errors.location && <p className="text-xs text-red-600 mt-1">{errors.location.message}</p>}
 
-      <BarriosInput value={barrios} onChange={setBarrios} />
+      <BarriosInput
+        value={barrios}
+        onChange={(v) => setValue('barrios', v, { shouldValidate: true })}
+      />
 
-      <VillageImagesInput villageId={villageId} value={images} onChange={setImages} />
+      <VillageImagesInput
+        villageId={villageId}
+        value={images}
+        onChange={(v) => setValue('images', v, { shouldValidate: true })}
+      />
 
-      <UserPicker value={adminUserId} onChange={setAdminUserId} label="Coordinador del pueblo" />
+      <UserPicker
+        value={adminUserId}
+        onChange={(v) => setValue('adminUserId', v, { shouldValidate: true })}
+        label="Coordinador del pueblo"
+      />
+      {errors.adminUserId && <p className="text-xs text-red-600 mt-1">{errors.adminUserId.message}</p>}
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {errors.root && <p className="text-sm text-red-600">{errors.root.message}</p>}
 
       <div className="flex gap-2">
         {onCancel && (
@@ -194,10 +221,10 @@ export function VillageForm({
         )}
         <button
           type="submit"
-          disabled={submitting}
+          disabled={isSubmitting}
           className="flex-1 bg-blue-600 text-white py-2 rounded-lg font-medium disabled:opacity-50"
         >
-          {submitting ? 'Guardando...' : mode === 'create' ? 'Crear pueblo' : 'Guardar cambios'}
+          {isSubmitting ? 'Guardando...' : mode === 'create' ? 'Crear pueblo' : 'Guardar cambios'}
         </button>
       </div>
     </form>

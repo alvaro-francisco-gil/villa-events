@@ -1,8 +1,19 @@
 'use client'
 
 import { useRef, useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { Camera, Trash2, User } from 'lucide-react'
-import type { PersonData, PartialDate, MunicipalityLink, BurialPlace } from '@cultuvilla/shared/models/person'
+import {
+  PersonFormSchema,
+  assemblePartialDate,
+  type PersonData,
+  type PartialDate,
+  type MunicipalityLink,
+  type BurialPlace,
+  type PersonFormInput,
+  type PersonFormValues,
+} from '@cultuvilla/shared/models/person'
 import { useMunicipalities } from '@/hooks/useMunicipalities'
 import { useBarrios } from '@/hooks/useBarrios'
 import { useCemeteries } from '@/hooks/useCemeteries'
@@ -37,30 +48,12 @@ interface PersonFormProps {
   submitLabel?: string
 }
 
-function pdToInputs(pd: PartialDate | null | undefined) {
-  return {
-    year: pd?.year != null ? String(pd.year) : '',
-    month: pd?.month != null ? String(pd.month) : '',
-    day: pd?.day != null ? String(pd.day) : '',
-  }
-}
-
-function inputsToPd(year: string, month: string, day: string): PartialDate | null {
-  if (!year && !month && !day) return null
-  return {
-    year: year ? parseInt(year, 10) : null,
-    month: month ? parseInt(month, 10) : null,
-    day: day ? parseInt(day, 10) : null,
-  }
-}
-
 const SEX_OPTIONS: { value: Sex; label: string }[] = [
   { value: 'male', label: 'Hombre' },
   { value: 'female', label: 'Mujer' },
   { value: 'other', label: 'Otro' },
 ]
 
-// Sub-component for a single municipality-link row (needs its own hook call for barrios)
 interface MunicipalityLinkRowProps {
   row: MunicipalityLink
   index: number
@@ -73,19 +66,11 @@ interface MunicipalityLinkRowProps {
 function MunicipalityLinkRow({ row, index, municipalities, onChange, onRemove, selectCls }: MunicipalityLinkRowProps) {
   const { barrios } = useBarrios(row.municipalityId || null)
 
-  const handleMunicipalityChange = (municipalityId: string) => {
-    onChange(index, { municipalityId, barrioId: null })
-  }
-
-  const handleBarrioChange = (barrioId: string) => {
-    onChange(index, { ...row, barrioId: barrioId || null })
-  }
-
   return (
     <div className="flex gap-2 items-center">
       <select
         value={row.municipalityId}
-        onChange={e => handleMunicipalityChange(e.target.value)}
+        onChange={e => onChange(index, { municipalityId: e.target.value, barrioId: null })}
         className={selectCls + ' flex-1'}
       >
         <option value="">Sin especificar</option>
@@ -96,7 +81,7 @@ function MunicipalityLinkRow({ row, index, municipalities, onChange, onRemove, s
       {row.municipalityId && (
         <select
           value={row.barrioId ?? ''}
-          onChange={e => handleBarrioChange(e.target.value)}
+          onChange={e => onChange(index, { ...row, barrioId: e.target.value || null })}
           className={selectCls + ' flex-1'}
         >
           <option value="">Sin barrio</option>
@@ -117,7 +102,6 @@ function MunicipalityLinkRow({ row, index, municipalities, onChange, onRemove, s
   )
 }
 
-// Sub-component for birth-place barrio picker (cascading)
 interface BirthPlaceBarrioProps {
   municipalityId: string
   barrioId: string
@@ -141,7 +125,6 @@ function BirthPlaceBarrioPicker({ municipalityId, barrioId, onBarrioChange, sele
   )
 }
 
-// Sub-component for burial-place cemetery picker (cascading)
 interface BurialCemeteryPickerProps {
   municipalityId: string
   cemeteryId: string
@@ -166,28 +149,34 @@ function BurialCemeteryPicker({ municipalityId, cemeteryId, onCemeteryChange, se
 }
 
 export function PersonForm({ initial, onSubmit, onCancel, submitLabel = 'Guardar' }: PersonFormProps) {
-  const [givenName, setGivenName] = useState(initial?.givenName ?? '')
-  const [middleNames, setMiddleNames] = useState((initial?.middleNames ?? []).join(', '))
-  const [firstSurname, setFirstSurname] = useState(initial?.firstSurname ?? '')
-  const [secondSurname, setSecondSurname] = useState(initial?.secondSurname ?? '')
-  const [nickname, setNickname] = useState(initial?.nickname ?? '')
-  const [sex, setSex] = useState<Sex | ''>(initial?.sex ?? '')
+  const {
+    register,
+    handleSubmit,
+    setError,
+    formState: { errors, isSubmitting },
+  } = useForm<PersonFormInput, unknown, PersonFormValues>({
+    resolver: zodResolver(PersonFormSchema),
+    defaultValues: {
+      givenName: initial?.givenName ?? '',
+      middleNames: (initial?.middleNames ?? []).join(', '),
+      firstSurname: initial?.firstSurname ?? '',
+      secondSurname: initial?.secondSurname ?? '',
+      nickname: initial?.nickname ?? '',
+      sex: (initial?.sex ?? '') as Sex | '',
+      birthYear: initial?.birthday?.year != null ? String(initial.birthday.year) : '',
+      birthMonth: initial?.birthday?.month != null ? String(initial.birthday.month) : '',
+      birthDay: initial?.birthday?.day != null ? String(initial.birthday.day) : '',
+      deathYear: initial?.deathDate?.year != null ? String(initial.deathDate.year) : '',
+      deathMonth: initial?.deathDate?.month != null ? String(initial.deathDate.month) : '',
+      deathDay: initial?.deathDate?.day != null ? String(initial.deathDate.day) : '',
+      biography: initial?.biography ?? '',
+    },
+  })
 
-  const bInit = pdToInputs(initial?.birthday)
-  const [birthYear, setBirthYear] = useState(bInit.year)
-  const [birthMonth, setBirthMonth] = useState(bInit.month)
-  const [birthDay, setBirthDay] = useState(bInit.day)
-
-  const dInit = pdToInputs(initial?.deathDate)
-  const [deathYear, setDeathYear] = useState(dInit.year)
-  const [deathMonth, setDeathMonth] = useState(dInit.month)
-  const [deathDay, setDeathDay] = useState(dInit.day)
-
-  const [biography, setBiography] = useState(initial?.biography ?? '')
+  // Photo state (handled outside RHF — File can't be registered cleanly)
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [photoPreview, setPhotoPreview] = useState<string | null>(initial?.photoURL ?? null)
-  const [submitting, setSubmitting] = useState(false)
-  const [error, setError] = useState('')
+  const [photoError, setPhotoError] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Birth place
@@ -212,21 +201,19 @@ export function PersonForm({ initial, onSubmit, onCancel, submitLabel = 'Guardar
   )
   const [occupationInput, setOccupationInput] = useState('')
 
-  // Hooks
   const { municipalities } = useMunicipalities()
   const { occupations } = useOccupations()
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-    if (!file.type.startsWith('image/')) { setError('El archivo no es una imagen'); return }
-    if (file.size > 5 * 1024 * 1024) { setError('La imagen supera 5 MB'); return }
-    setError('')
+    if (!file.type.startsWith('image/')) { setPhotoError('El archivo no es una imagen'); return }
+    if (file.size > 5 * 1024 * 1024) { setPhotoError('La imagen supera 5 MB'); return }
+    setPhotoError('')
     setPhotoFile(file)
     setPhotoPreview(URL.createObjectURL(file))
   }
 
-  // Municipality links handlers
   const handleLinkChange = (index: number, row: MunicipalityLink) => {
     setMunicipalityLinks(prev => prev.map((r, i) => i === index ? row : r))
   }
@@ -237,7 +224,6 @@ export function PersonForm({ initial, onSubmit, onCancel, submitLabel = 'Guardar
     setMunicipalityLinks(prev => [...prev, { municipalityId: '', barrioId: null }])
   }
 
-  // Occupation toggle
   const toggleOccupation = (id: string) => {
     setOccupationIds(prev => {
       const next = new Set(prev)
@@ -247,7 +233,6 @@ export function PersonForm({ initial, onSubmit, onCancel, submitLabel = 'Guardar
     })
   }
 
-  // Propose occupation
   const handleProposeOccupation = () => {
     const trimmed = occupationInput.trim()
     if (!trimmed) return
@@ -263,36 +248,29 @@ export function PersonForm({ initial, onSubmit, onCancel, submitLabel = 'Guardar
     setPendingOccupations(prev => prev.filter(p => p !== name))
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!givenName.trim()) { setError('El nombre es obligatorio'); return }
-    setError('')
-    setSubmitting(true)
-    try {
-      // Compute birthPlace
-      const birthPlace: MunicipalityLink | null = birthMunicipalityId
-        ? { municipalityId: birthMunicipalityId, barrioId: birthBarrioId || null }
+  const submit = handleSubmit(async (data) => {
+    const birthPlace: MunicipalityLink | null = birthMunicipalityId
+      ? { municipalityId: birthMunicipalityId, barrioId: birthBarrioId || null }
+      : null
+
+    const burialPlace: BurialPlace | null =
+      burialMunicipalityId && burialCemeteryId
+        ? { municipalityId: burialMunicipalityId, cemeteryId: burialCemeteryId }
         : null
 
-      // Compute burialPlace — only set when both municipalityId and cemeteryId are present
-      const burialPlace: BurialPlace | null =
-        burialMunicipalityId && burialCemeteryId
-          ? { municipalityId: burialMunicipalityId, cemeteryId: burialCemeteryId }
-          : null
+    const filteredLinks = municipalityLinks.filter(l => l.municipalityId !== '')
 
-      // Filter out empty municipality-link rows
-      const filteredLinks = municipalityLinks.filter(l => l.municipalityId !== '')
-
+    try {
       await onSubmit({
-        givenName: givenName.trim(),
-        middleNames: middleNames.split(',').map(s => s.trim()).filter(Boolean),
-        firstSurname: firstSurname.trim() || null,
-        secondSurname: secondSurname.trim() || null,
-        nickname: nickname.trim() || null,
-        sex: (sex as Sex) || null,
-        birthday: inputsToPd(birthYear, birthMonth, birthDay),
-        deathDate: inputsToPd(deathYear, deathMonth, deathDay),
-        biography: biography.trim() || null,
+        givenName: data.givenName,
+        middleNames: data.middleNames,
+        firstSurname: data.firstSurname,
+        secondSurname: data.secondSurname,
+        nickname: data.nickname,
+        sex: data.sex,
+        birthday: assemblePartialDate(data.birthYear, data.birthMonth, data.birthDay),
+        deathDate: assemblePartialDate(data.deathYear, data.deathMonth, data.deathDay),
+        biography: data.biography,
         photoFile,
         birthPlace,
         municipalityLinks: filteredLinks,
@@ -301,18 +279,16 @@ export function PersonForm({ initial, onSubmit, onCancel, submitLabel = 'Guardar
         pendingOccupations,
       })
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al guardar')
-    } finally {
-      setSubmitting(false)
+      setError('root', { message: err instanceof Error ? err.message : 'Error al guardar' })
     }
-  }
+  })
 
   const inputCls = 'w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
   const numCls = 'border border-gray-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
   const selectCls = 'w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3">
+    <form onSubmit={submit} className="space-y-3" noValidate>
       {/* Photo */}
       <div className="flex justify-center mb-1">
         <button
@@ -332,16 +308,19 @@ export function PersonForm({ initial, onSubmit, onCancel, submitLabel = 'Guardar
 
       {/* Name */}
       <div className="grid grid-cols-2 gap-2">
-        <input type="text" placeholder="Nombre *" value={givenName} onChange={e => setGivenName(e.target.value)} required className={inputCls} />
-        <input type="text" placeholder="Segundos nombres (sep. comas)" value={middleNames} onChange={e => setMiddleNames(e.target.value)} className={inputCls} />
+        <div>
+          <input type="text" placeholder="Nombre *" {...register('givenName')} className={inputCls} />
+          {errors.givenName && <p className="text-xs text-red-600 mt-1 ml-1">{errors.givenName.message}</p>}
+        </div>
+        <input type="text" placeholder="Segundos nombres (sep. comas)" {...register('middleNames')} className={inputCls} />
       </div>
       <div className="grid grid-cols-2 gap-2">
-        <input type="text" placeholder="Primer apellido" value={firstSurname} onChange={e => setFirstSurname(e.target.value)} className={inputCls} />
-        <input type="text" placeholder="Segundo apellido" value={secondSurname} onChange={e => setSecondSurname(e.target.value)} className={inputCls} />
+        <input type="text" placeholder="Primer apellido" {...register('firstSurname')} className={inputCls} />
+        <input type="text" placeholder="Segundo apellido" {...register('secondSurname')} className={inputCls} />
       </div>
       <div className="grid grid-cols-2 gap-2">
-        <input type="text" placeholder="Mote (apodo)" value={nickname} onChange={e => setNickname(e.target.value)} className={inputCls} />
-        <select value={sex} onChange={e => setSex(e.target.value as Sex | '')} className={inputCls}>
+        <input type="text" placeholder="Mote (apodo)" {...register('nickname')} className={inputCls} />
+        <select {...register('sex')} className={inputCls}>
           <option value="">Sexo (opcional)</option>
           {SEX_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
@@ -351,20 +330,30 @@ export function PersonForm({ initial, onSubmit, onCancel, submitLabel = 'Guardar
       <div>
         <label className="block text-xs text-gray-500 mb-1 ml-1">Fecha de nacimiento (año, mes y día son opcionales)</label>
         <div className="grid grid-cols-3 gap-2">
-          <input type="number" placeholder="Año" value={birthYear} onChange={e => setBirthYear(e.target.value)} className={numCls} />
-          <input type="number" placeholder="Mes" min={1} max={12} value={birthMonth} onChange={e => setBirthMonth(e.target.value)} className={numCls} />
-          <input type="number" placeholder="Día" min={1} max={31} value={birthDay} onChange={e => setBirthDay(e.target.value)} className={numCls} />
+          <input type="number" placeholder="Año" {...register('birthYear')} className={numCls} />
+          <input type="number" placeholder="Mes" min={1} max={12} {...register('birthMonth')} className={numCls} />
+          <input type="number" placeholder="Día" min={1} max={31} {...register('birthDay')} className={numCls} />
         </div>
+        {(errors.birthYear || errors.birthMonth || errors.birthDay) && (
+          <p className="text-xs text-red-600 mt-1 ml-1">
+            {errors.birthYear?.message || errors.birthMonth?.message || errors.birthDay?.message}
+          </p>
+        )}
       </div>
 
       {/* Death date */}
       <div>
         <label className="block text-xs text-gray-500 mb-1 ml-1">Fecha de defunción (opcional)</label>
         <div className="grid grid-cols-3 gap-2">
-          <input type="number" placeholder="Año" value={deathYear} onChange={e => setDeathYear(e.target.value)} className={numCls} />
-          <input type="number" placeholder="Mes" min={1} max={12} value={deathMonth} onChange={e => setDeathMonth(e.target.value)} className={numCls} />
-          <input type="number" placeholder="Día" min={1} max={31} value={deathDay} onChange={e => setDeathDay(e.target.value)} className={numCls} />
+          <input type="number" placeholder="Año" {...register('deathYear')} className={numCls} />
+          <input type="number" placeholder="Mes" min={1} max={12} {...register('deathMonth')} className={numCls} />
+          <input type="number" placeholder="Día" min={1} max={31} {...register('deathDay')} className={numCls} />
         </div>
+        {(errors.deathYear || errors.deathMonth || errors.deathDay) && (
+          <p className="text-xs text-red-600 mt-1 ml-1">
+            {errors.deathYear?.message || errors.deathMonth?.message || errors.deathDay?.message}
+          </p>
+        )}
       </div>
 
       {/* Birth place */}
@@ -513,18 +502,20 @@ export function PersonForm({ initial, onSubmit, onCancel, submitLabel = 'Guardar
       </div>
 
       <textarea
-        placeholder="Biografía (opcional)" value={biography}
-        onChange={e => setBiography(e.target.value)} rows={3}
+        placeholder="Biografía (opcional)"
+        {...register('biography')}
+        rows={3}
         className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
       />
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {photoError && <p className="text-sm text-red-600">{photoError}</p>}
+      {errors.root && <p className="text-sm text-red-600">{errors.root.message}</p>}
       <div className="flex gap-2">
         <button type="button" onClick={onCancel} className="flex-1 border border-gray-300 py-2.5 rounded-xl text-sm text-gray-700 hover:bg-gray-50 transition">
           Cancelar
         </button>
-        <button type="submit" disabled={submitting} className="flex-1 bg-blue-600 text-white py-2.5 rounded-xl text-sm font-medium hover:bg-blue-700 transition disabled:opacity-50">
-          {submitting ? 'Guardando...' : submitLabel}
+        <button type="submit" disabled={isSubmitting} className="flex-1 bg-blue-600 text-white py-2.5 rounded-xl text-sm font-medium hover:bg-blue-700 transition disabled:opacity-50">
+          {isSubmitting ? 'Guardando...' : submitLabel}
         </button>
       </div>
     </form>
