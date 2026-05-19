@@ -6,8 +6,20 @@ import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Cultuvilla',
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'),
+  title: {
+    default: 'Cultuvilla',
+    template: '%s · Cultuvilla',
+  },
   description: 'Eventos de tu pueblo',
+  applicationName: 'Cultuvilla',
+  openGraph: {
+    title: 'Cultuvilla',
+    description: 'Eventos de tu pueblo',
+    siteName: 'Cultuvilla',
+    type: 'website',
+    locale: 'es_ES',
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
