@@ -16,5 +16,13 @@ export default defineConfig({
       NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: '0',
       NEXT_PUBLIC_FIREBASE_APP_ID: 'test-app-id',
     },
+    // Default unit-test scope. Integration and e2e suites have their own
+    // configs (vitest.config.integration.ts / vitest.config.e2e.ts).
+    include: [
+      'test/models/**/*.test.ts',
+      'test/services/**/*.test.ts',
+      'test/firebase/**/*.test.ts',
+      'test/eslint/**/*.test.ts',
+    ],
   },
 });
