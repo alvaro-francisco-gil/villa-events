@@ -1,0 +1,42 @@
+import { TextInput, type TextInputProps, View } from 'react-native';
+import { Text } from './Text';
+import { VStack } from './VStack';
+
+export type InputProps = Omit<TextInputProps, 'style' | 'value' | 'onChangeText'> & {
+  value: string;
+  onChangeText: (next: string) => void;
+  label?: string;
+  error?: string;
+};
+
+// Controlled text input. `onChangeText` (vs `onChange`) keeps the API aligned
+// with apps/web/components/primitives/Input.tsx — and with React Native
+// convention. Label and error are rendered inline.
+export function Input({ label, value, onChangeText, error, ...rest }: InputProps) {
+  return (
+    <VStack gap={1}>
+      {label && (
+        <Text variant="bodySm" tone="muted">
+          {label}
+        </Text>
+      )}
+      <View
+        className={`border rounded-md px-3 py-2 bg-surface ${
+          error ? 'border-danger' : 'border-subtle'
+        }`}
+      >
+        <TextInput
+          value={value}
+          onChangeText={onChangeText}
+          className="text-primary text-body"
+          {...rest}
+        />
+      </View>
+      {error && (
+        <Text variant="caption" tone="danger">
+          {error}
+        </Text>
+      )}
+    </VStack>
+  );
+}
