@@ -36,7 +36,7 @@ export async function getUpcomingFeed(
 
   const snap = await getDocs(q);
   const events = snap.docs.map((d) => mapEventDoc(d as Parameters<typeof mapEventDoc>[0]));
-  const lastDoc = snap.docs.length > 0 ? snap.docs[snap.docs.length - 1] : null;
+  const lastDoc = snap.docs.length > 0 ? (snap.docs[snap.docs.length - 1] ?? null) : null;
   return { events, cursor: lastDoc };
 }
 

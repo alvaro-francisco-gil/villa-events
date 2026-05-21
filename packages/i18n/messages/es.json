@@ -35,7 +35,8 @@
     }
   },
   "feed": {
-    "title": "Inicio"
+    "title": "Inicio",
+    "empty": "No hay eventos próximos"
   },
   "nav": {
     "home": "Inicio",
@@ -76,7 +77,13 @@
     "completed": "Completado",
     "publish": "Publicar",
     "createEvent": "Crear evento",
-    "editEvent": "Editar evento"
+    "editEvent": "Editar evento",
+    "register": {
+      "cta": "Apuntarme",
+      "done": "¡Apuntado!",
+      "error": "No pudimos apuntarte",
+      "needsPerson": "Completa tu perfil para apuntarte"
+    }
   },
   "organization": {
     "name": "Nombre",

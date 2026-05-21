@@ -79,6 +79,7 @@ export async function getPersonByUserId(userId: string): Promise<(PersonData & {
   const snap = await getDocs(q)
   if (snap.empty) return null
   const d = snap.docs[0]
+  if (!d) return null
   return fromDoc(d.id, d.data() as Record<string, unknown>)
 }
 
