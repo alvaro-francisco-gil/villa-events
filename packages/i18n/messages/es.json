@@ -19,7 +19,23 @@
     "email": "Correo electrónico",
     "password": "Contraseña",
     "displayName": "Nombre",
-    "birthday": "Fecha de nacimiento"
+    "birthday": "Fecha de nacimiento",
+    "login": {
+      "title": "Iniciar sesión",
+      "submit": "Entrar",
+      "toSignup": "¿No tienes cuenta? Crear una"
+    },
+    "signup": {
+      "title": "Crear cuenta",
+      "submit": "Registrarse",
+      "toLogin": "¿Ya tienes cuenta? Iniciar sesión"
+    },
+    "error": {
+      "unknown": "Algo salió mal"
+    }
+  },
+  "feed": {
+    "title": "Inicio"
   },
   "nav": {
     "home": "Inicio",
