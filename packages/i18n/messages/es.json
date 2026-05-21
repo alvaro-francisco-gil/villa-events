@@ -117,6 +117,9 @@
   },
   "profile": {
     "myProfile": "Mi perfil",
+    "title": "Tu perfil",
+    "changePhoto": "Cambiar foto",
+    "signOut": "Cerrar sesión",
     "personas": "Personas a cargo",
     "addPersona": "Añadir persona",
     "editPersona": "Editar persona",
