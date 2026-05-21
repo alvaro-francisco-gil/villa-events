@@ -10,6 +10,7 @@ import { initializeAuth, getReactNativePersistence } from '@firebase/auth';
 import type { FirebaseOptions } from 'firebase/app';
 import Constants from 'expo-constants';
 import { initFirebase } from '@cultuvilla/shared/firebase';
+import { initMobileAppCheck } from './appCheck';
 
 /**
  * Read the per-environment FirebaseOptions that app.config.ts wrote into
@@ -43,4 +44,5 @@ export function bootstrapFirebase(): void {
         persistence: getReactNativePersistence(AsyncStorage),
       }),
   });
+  initMobileAppCheck();
 }
