@@ -1,0 +1,79 @@
+import { useEffect, useState } from 'react';
+import { useLocalSearchParams } from 'expo-router';
+import { ActivityIndicator } from 'react-native';
+import { Screen } from '../../components/primitives/Screen';
+import { VStack } from '../../components/primitives/VStack';
+import { Text } from '../../components/primitives/Text';
+import { RegisterButton } from '../../components/feature/RegisterButton';
+import { useAuth } from '../../lib/auth/useAuth';
+import { getEvent } from '@cultuvilla/shared/services/eventService';
+import { getPersonByUserId } from '@cultuvilla/shared/services/personService';
+import { buildDisplayName } from '@cultuvilla/shared/models/person/PersonDataModel';
+import { formatDate } from '@cultuvilla/shared/utils';
+import { useT } from '../../lib/i18n';
+import type { EventData } from '@cultuvilla/shared/models/event/EventDataModel';
+import type { PersonData } from '@cultuvilla/shared/models/person/PersonDataModel';
+
+type EventDoc = EventData & { id: string };
+type PersonDoc = PersonData & { id: string };
+
+export default function EventDetailScreen() {
+  const { eventId } = useLocalSearchParams<{ eventId: string }>();
+  const { user } = useAuth();
+  const { t } = useT();
+  const [event, setEvent] = useState<EventDoc | null>(null);
+  const [person, setPerson] = useState<PersonDoc | null>(null);
+  const [registered, setRegistered] = useState(false);
+
+  useEffect(() => {
+    if (!eventId) return;
+    void (async () => {
+      const e = await getEvent(eventId);
+      setEvent(e);
+    })();
+  }, [eventId]);
+
+  useEffect(() => {
+    if (!user) return;
+    void (async () => {
+      const p = await getPersonByUserId(user.uid);
+      setPerson(p);
+    })();
+  }, [user]);
+
+  if (!event) {
+    return (
+      <Screen>
+        <ActivityIndicator />
+      </Screen>
+    );
+  }
+
+  const personName = person ? buildDisplayName(person) : '';
+
+  return (
+    <Screen scroll>
+      <VStack gap={4}>
+        <Text variant="h1">{event.title}</Text>
+        <Text tone="muted">{event.organizationName}</Text>
+        <Text>{formatDate(event.startDate, 'long')}</Text>
+        {event.description ? <Text>{event.description}</Text> : null}
+
+        {person && !registered && (
+          <RegisterButton
+            eventId={event.id}
+            personId={person.id}
+            name={personName}
+            onRegistered={() => setRegistered(true)}
+          />
+        )}
+        {registered && (
+          <Text tone="success">{t('event.register.done')}</Text>
+        )}
+        {!person && user && (
+          <Text tone="muted">{t('event.register.needsPerson')}</Text>
+        )}
+      </VStack>
+    </Screen>
+  );
+}

@@ -19,7 +19,24 @@
     "email": "Correo electrónico",
     "password": "Contraseña",
     "displayName": "Nombre",
-    "birthday": "Fecha de nacimiento"
+    "birthday": "Fecha de nacimiento",
+    "login": {
+      "title": "Iniciar sesión",
+      "submit": "Entrar",
+      "toSignup": "¿No tienes cuenta? Crear una"
+    },
+    "signup": {
+      "title": "Crear cuenta",
+      "submit": "Registrarse",
+      "toLogin": "¿Ya tienes cuenta? Iniciar sesión"
+    },
+    "error": {
+      "unknown": "Algo salió mal"
+    }
+  },
+  "feed": {
+    "title": "Inicio",
+    "empty": "No hay eventos próximos"
   },
   "nav": {
     "home": "Inicio",
@@ -29,11 +46,28 @@
   },
   "village": {
     "title": "Pueblos",
-    "events": "Eventos",
+    "events": {
+      "label": "Eventos",
+      "empty": "No hay eventos en este pueblo"
+    },
     "organizations": "Organizaciones",
     "members": "Miembros",
     "admin": "Administración",
-    "generateInvite": "Generar invitación"
+    "generateInvite": "Generar invitación",
+    "censo": {
+      "link": "Completar mi censo"
+    }
+  },
+  "villages": {
+    "empty": "Aún no perteneces a ningún pueblo"
+  },
+  "censo": {
+    "title": "Tu censo",
+    "save": "Guardar",
+    "saved": "Censo guardado",
+    "error": "No pudimos guardar",
+    "noFields": "Este pueblo no tiene censo configurado",
+    "missingRequired": "Campos obligatorios sin rellenar"
   },
   "event": {
     "title": "Título",
@@ -60,7 +94,13 @@
     "completed": "Completado",
     "publish": "Publicar",
     "createEvent": "Crear evento",
-    "editEvent": "Editar evento"
+    "editEvent": "Editar evento",
+    "register": {
+      "cta": "Apuntarme",
+      "done": "¡Apuntado!",
+      "error": "No pudimos apuntarte",
+      "needsPerson": "Completa tu perfil para apuntarte"
+    }
   },
   "organization": {
     "name": "Nombre",
@@ -77,6 +117,9 @@
   },
   "profile": {
     "myProfile": "Mi perfil",
+    "title": "Tu perfil",
+    "changePhoto": "Cambiar foto",
+    "signOut": "Cerrar sesión",
     "personas": "Personas a cargo",
     "addPersona": "Añadir persona",
     "editPersona": "Editar persona",
